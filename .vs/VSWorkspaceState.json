@@ -1,0 +1,11 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\venv",
+    "\\venv\\Lib",
+    "\\venv\\Lib\\site-packages",
+    "\\venv\\Lib\\site-packages\\fastapi"
+  ],
+  "SelectedNode": "\\venv\\Lib\\site-packages\\fastapi\\__main__.py",
+  "PreviewInSolutionExplorer": false
+}

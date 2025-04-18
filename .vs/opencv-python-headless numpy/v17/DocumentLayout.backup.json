@@ -1,0 +1,220 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\app.py||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:app.py||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Lib\\site-packages\\fastapi\\__main__.py||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:venv\\Lib\\site-packages\\fastapi\\__main__.py||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Lib\\site-packages\\dateutil\\easter.py||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:venv\\Lib\\site-packages\\dateutil\\easter.py||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\share\\man\\man1\\ttx.1||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:venv\\share\\man\\man1\\ttx.1||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\pyvenv.cfg||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:venv\\pyvenv.cfg||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Scripts\\uvicorn.exe||{177559E0-D141-11D0-92DF-00A0C9138C45}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:venv\\Scripts\\uvicorn.exe||{177559E0-D141-11D0-92DF-00A0C9138C45}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Scripts\\activate.bat||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:venv\\Scripts\\activate.bat||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Scripts\\Activate.ps1||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:venv\\Scripts\\Activate.ps1||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Scripts\\fastapi.exe||{177559E0-D141-11D0-92DF-00A0C9138C45}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:venv\\Scripts\\fastapi.exe||{177559E0-D141-11D0-92DF-00A0C9138C45}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Scripts\\activate||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:venv\\Scripts\\activate||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Lib\\site-packages\\uvicorn\\middleware\\__init__.py||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:venv\\Lib\\site-packages\\uvicorn\\middleware\\__init__.py||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Lib\\site-packages\\uvicorn\\importer.py||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:venv\\Lib\\site-packages\\uvicorn\\importer.py||{8B382828-6202-11D1-8870-0000F87579D2}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "__main__.py",
+              "DocumentMoniker": "D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Lib\\site-packages\\fastapi\\__main__.py",
+              "RelativeDocumentMoniker": "venv\\Lib\\site-packages\\fastapi\\__main__.py",
+              "ToolTip": "D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Lib\\site-packages\\fastapi\\__main__.py",
+              "RelativeToolTip": "venv\\Lib\\site-packages\\fastapi\\__main__.py",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
+              "WhenOpened": "2025-04-10T07:11:20.023Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "app.py",
+              "DocumentMoniker": "D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\app.py",
+              "RelativeDocumentMoniker": "app.py",
+              "ToolTip": "D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\app.py",
+              "RelativeToolTip": "app.py",
+              "ViewState": "AgIAAA0CAAAAAAAAAAAAABoCAABDAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
+              "WhenOpened": "2025-04-10T07:19:27.284Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "easter.py",
+              "DocumentMoniker": "D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Lib\\site-packages\\dateutil\\easter.py",
+              "RelativeDocumentMoniker": "venv\\Lib\\site-packages\\dateutil\\easter.py",
+              "ToolTip": "D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Lib\\site-packages\\dateutil\\easter.py",
+              "RelativeToolTip": "venv\\Lib\\site-packages\\dateutil\\easter.py",
+              "ViewState": "AgIAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
+              "WhenOpened": "2025-04-10T07:10:18.826Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "ttx.1",
+              "DocumentMoniker": "D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\share\\man\\man1\\ttx.1",
+              "RelativeDocumentMoniker": "venv\\share\\man\\man1\\ttx.1",
+              "ToolTip": "D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\share\\man\\man1\\ttx.1",
+              "RelativeToolTip": "venv\\share\\man\\man1\\ttx.1",
+              "ViewState": "AgIAALYAAAAAAAAAAAAwwOAAAAALAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-04-10T07:09:29.818Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "pyvenv.cfg",
+              "DocumentMoniker": "D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\pyvenv.cfg",
+              "RelativeDocumentMoniker": "venv\\pyvenv.cfg",
+              "ToolTip": "D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\pyvenv.cfg",
+              "RelativeToolTip": "venv\\pyvenv.cfg",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-04-10T07:09:26.742Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "uvicorn.exe",
+              "DocumentMoniker": "D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Scripts\\uvicorn.exe",
+              "RelativeDocumentMoniker": "venv\\Scripts\\uvicorn.exe",
+              "ToolTip": "D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Scripts\\uvicorn.exe",
+              "RelativeToolTip": "venv\\Scripts\\uvicorn.exe",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000165|",
+              "WhenOpened": "2025-04-10T07:09:24.86Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "activate.bat",
+              "DocumentMoniker": "D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Scripts\\activate.bat",
+              "RelativeDocumentMoniker": "venv\\Scripts\\activate.bat",
+              "ToolTip": "D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Scripts\\activate.bat",
+              "RelativeToolTip": "venv\\Scripts\\activate.bat",
+              "ViewState": "AgIAABIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000614|",
+              "WhenOpened": "2025-04-10T07:09:01.157Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "Activate.ps1",
+              "DocumentMoniker": "D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Scripts\\Activate.ps1",
+              "RelativeDocumentMoniker": "venv\\Scripts\\Activate.ps1",
+              "ToolTip": "D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Scripts\\Activate.ps1",
+              "RelativeToolTip": "venv\\Scripts\\Activate.ps1",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-04-10T07:08:59.177Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "fastapi.exe",
+              "DocumentMoniker": "D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Scripts\\fastapi.exe",
+              "RelativeDocumentMoniker": "venv\\Scripts\\fastapi.exe",
+              "ToolTip": "D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Scripts\\fastapi.exe",
+              "RelativeToolTip": "venv\\Scripts\\fastapi.exe",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000165|",
+              "WhenOpened": "2025-04-10T07:08:57.766Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "activate",
+              "DocumentMoniker": "D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Scripts\\activate",
+              "RelativeDocumentMoniker": "venv\\Scripts\\activate",
+              "ToolTip": "D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Scripts\\activate",
+              "RelativeToolTip": "venv\\Scripts\\activate",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-04-10T07:08:55.928Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "__init__.py",
+              "DocumentMoniker": "D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Lib\\site-packages\\uvicorn\\middleware\\__init__.py",
+              "RelativeDocumentMoniker": "venv\\Lib\\site-packages\\uvicorn\\middleware\\__init__.py",
+              "ToolTip": "D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Lib\\site-packages\\uvicorn\\middleware\\__init__.py",
+              "RelativeToolTip": "venv\\Lib\\site-packages\\uvicorn\\middleware\\__init__.py",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
+              "WhenOpened": "2025-04-10T07:08:11.326Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "importer.py",
+              "DocumentMoniker": "D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Lib\\site-packages\\uvicorn\\importer.py",
+              "RelativeDocumentMoniker": "venv\\Lib\\site-packages\\uvicorn\\importer.py",
+              "ToolTip": "D:\\Tugas Kuliah\\Semester 4\\PCD Praktek\\Pertemuan 5 - Copy\\[PCD2024_2C_072_D3_2023]_ModulETS\\opencv-python-headless numpy\\venv\\Lib\\site-packages\\uvicorn\\importer.py",
+              "RelativeToolTip": "venv\\Lib\\site-packages\\uvicorn\\importer.py",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
+              "WhenOpened": "2025-04-10T07:06:06.96Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Pendeteksi Wajah</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: linear-gradient(45deg, #1a1a1a, #2c3e50, #3498db, #e74c3c);
+      background-size: 400%;
+      animation: gradientAnimation 15s ease infinite;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #fff;
+      overflow-x: hidden;
+    }
+
+    @keyframes gradientAnimation {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .container {
+      background: rgba(0, 0, 0, 0.85);
+      border-radius: 15px;
+      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.1);
+      padding: 2.5rem;
+      max-width: 550px;
+      width: 90%;
+      text-align: center;
+      transform: perspective(1000px) rotateY(5deg);
+      transition: transform 0.5s ease;
+      position: relative;
+      z-index: 1;
+    }
+
+    .container:hover {
+      transform: perspective(1000px) rotateY(0deg);
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 900;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(45deg, #3498db, #e74c3c);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    }
+
+    input[type="file"], input[type="text"] {
+      display: block;
+      margin: 1.5rem auto;
+      color: #fff;
+      padding: 0.5rem;
+      border: 2px solid #3498db;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      transition: all 0.3s ease;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    input[type="file"]:hover, input[type="file"]:focus,
+    input[type="text"]:hover, input[type="text"]:focus {
+      border-color: #e74c3c;
+      box-shadow: 0 0 15px rgba(231, 76, 60, 0.5);
+    }
+
+    select, button {
+      font-family: 'Montserrat', sans-serif;
+      margin: 0.75rem 0;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 10px;
+      width: 100%;
+      box-sizing: border-box;
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    select:focus {
+      outline: none;
+      box-shadow: 0 0 20px rgba(52, 152, 219, 0.7);
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    button {
+      background: linear-gradient(45deg, #3498db, #e74c3c);
+      color: white;
+      cursor: pointer;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 10px 25px rgba(231, 76, 60, 0.6);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+    }
+
+    .result {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      text-align: left;
+      font-weight: 400;
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    .result h3 {
+      font-weight: 700;
+      color: #e74c3c;
+      margin-bottom: 1rem;
+    }
+
+    .result p, .result li {
+      color: #ecf0f1;
+      line-height: 1.6;
+    }
+
+    .result img {
+      max-width: 100%;
+      border-radius: 10px;
+      margin-top: 1rem;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      transition: transform 0.3s ease;
+    }
+
+    .result img:hover {
+      transform: scale(1.02);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    select option {
+      background: #2c3e50;
+      color: #fff;
+    }
+
+    ::placeholder {
+      color: #bdc3c7;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>DETEKSI WAJAHMU UNTUK MELIHAT KETURUNAN</h1>
+    <form id="uploadForm">
+      <input type="file" name="file" accept="image/*" />
+      <input type="text" name="name" placeholder="Masukkan Nama Disini" />
+      <select name="keturunan">
+        <option value="Jawa">Jawa</option>
+        <option value="Sunda">Sunda</option>
+        <option value="Batak">Batak</option>
+      </select>
+      <select id="endpointSelect">
+        <option value="/detect">Deteksi Wajah</option>
+        <option value="/compare">Bandingkan Wajah</option>
+        <option value="/keturunan">Deteksi Keturunan</option>
+        <option value="/register">Daftarkan Wajah</option>
+        <option value="/import_dataset">Impor Dataset</option>
+      </select>
+      <input type="text" name="dataset_path" placeholder="Masukkan path folder dataset (misalnya, ./dataset_wajah)" />
+      <input type="text" name="metadata_path" placeholder="Masukkan path file metadata (opsional, misalnya, ./dataset_wajah/metadata.csv)" />
+      <button type="submit">Kirim ke API</button>
+    </form>
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const form = e.target;
+      const formData = new FormData(form);
+      const endpoint = document.getElementById('endpointSelect').value;
+
+      if (endpoint !== '/register' && endpoint !== '/import_dataset') {
+        formData.delete('name');
+        formData.delete('keturunan');
+        formData.delete('dataset_path');
+        formData.delete('metadata_path');
+      } else if (endpoint === '/import_dataset') {
+        formData.delete('file');
+        formData.delete('name');
+        formData.delete('keturunan');
+      }
+
+      const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = document.getElementById('result');
+      result.innerHTML = '';
+
+      if (!res.ok) {
+        const err = await res.json();
+        result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${err.detail}</p>`;
+      } else {
+        const data = await res.json();
+        
+        if (endpoint === '/detect') {
+          result.innerHTML += `<p>Jumlah wajah yang terdeteksi: ${data.faces_detected}</p>`;
+          if (data.image_path) {
+            result.innerHTML += `<img src="${data.image_path}" alt="Wajah terdeteksi" />`;
+          }
+        } else if (endpoint === '/compare') {
+          if (data.results.length > 0) {
+            result.innerHTML += '<h3>Wajah Serupa yang Ditemukan:</h3><ul>';
+            data.results.forEach(person => {
+              result.innerHTML += `<li>${person.nama} (${person.keturunan}) - Kemiripan: ${(person.similarity * 100).toFixed(0)}%</li>`;
+            });
+            result.innerHTML += '</ul>';
+          } else {
+            result.innerHTML += '<p>Tidak ada wajah serupa yang ditemukan di database.</p>';
+          }
+          result.innerHTML += `<p>Ambang batas yang digunakan: ${(data.threshold * 100).toFixed(0)}%</p>`;
+        } else if (endpoint === '/keturunan') {
+          result.innerHTML += `<h3>Hasil Deteksi Keturunan:</h3>`;
+          result.innerHTML += `<p>Keturunan dominan: ${data.dominant_keturunan}</p>`;
+          result.innerHTML += '<p>Prediksi:</p><ul>';
+          data.predictions.forEach(pred => {
+            result.innerHTML += `<li>${pred.keturunan}: ${(pred.confidence * 100).toFixed(0)}%</li>`;
+          });
+          result.innerHTML += '</ul>';
+          if (data.image_path) {
+            result.innerHTML += `<img src="${data.image_path}" alt="Deteksi keturunan" />`;
+          }
+        } else if (endpoint === '/register') {
+          result.innerHTML += `<h3>Pendaftaran Berhasil</h3>`;
+          result.innerHTML += `<p>Nama: ${data.nama}</p>`;
+          result.innerHTML += `<p>Keturunan: ${data.keturunan}</p>`;
+          result.innerHTML += `<p>ID: ${data.id}</p>`;
+          result.innerHTML += `<p>Jumlah embedding: ${data.embedding_count}</p>`;
+        } else if (endpoint === '/import_dataset') {
+          result.innerHTML += `<h3>Impor Dataset Berhasil</h3>`;
+          result.innerHTML += `<p>Jumlah wajah yang diimpor: ${data.imported_count}</p>`;
+          result.innerHTML += `<p>Pesan: ${data.message}</p>`;
+          if (data.failed_files.length > 0) {
+            result.innerHTML += '<p>File yang gagal:</p><ul>';
+            data.failed_files.forEach(file => {
+              result.innerHTML += `<li>${file}</li>`;
+            });
+            result.innerHTML += '</ul>';
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
