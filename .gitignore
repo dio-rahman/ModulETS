@@ -1,4 +1,7 @@
+env/
+venv/
+*.pyc
+__pycache__/
+*.pyd
+*.dll"env/" 
 "venv/" 
-"__pycache__/" 
-"*.pyc" 
-"env/" 
