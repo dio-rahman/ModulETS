@@ -274,21 +274,30 @@
       display: block;
       animation: fadeIn 0.5s ease;
     }
+    
+    .expression-badge {
+      display: inline-block;
+      background: linear-gradient(45deg, #9b59b6, #3498db);
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Welcome Screen -->
     <div id="welcome-screen" class="welcome-screen active-screen">
       <h1 class="welcome-title">SELAMAT DATANG</h1>
-      <p class="welcome-subtitle">Deteksi wajah dan keturunan dengan teknologi pengenalan wajah canggih. Pilih salah satu fitur di bawah ini:</p>
+      <p class="welcome-subtitle">Pindai wajahmu serta deteksi keturunan menggunakan aplikasi ini!. Pilih salah satu fitur di bawah ini</p>
       
       <button id="dataset-upload-btn" class="feature-btn green">Upload Dataset Wajah</button>
       <button id="webcam-detection-btn" class="feature-btn">Deteksi Realtime dengan Kamera</button>
       <button id="comparison-btn" class="feature-btn orange">Bandingkan Wajah</button>
     </div>
 
-    <!-- Dataset Upload Screen -->
     <div id="dataset-upload-screen" class="dataset-upload-screen">
       <h1>UPLOAD DATASET WAJAH</h1>
       
@@ -309,7 +318,6 @@
       <button class="back-btn" id="upload-back-btn">Kembali ke Menu Utama</button>
     </div>
 
-    <!-- Webcam Detection Screen -->
     <div id="webcam-detection-screen" class="webcam-detection-screen">
       <h1>DETEKSI KETURUNAN REALTIME</h1>
       
@@ -324,43 +332,38 @@
       </div>
       
       <div class="detection-result" id="webcam-result">
-        <h3>Hasil Deteksi:</h3>
-        
-        <p>Cina:</p>
+        <p>Cina : </p><p id="cina-percentage">0%</p>
         <div class="percentage-bar">
           <div class="percentage-fill" id="cina-bar" style="width: 0%"></div>
         </div>
-        <p id="cina-percentage">0%</p>
         
-        <p>Jawa:</p>
+        <p>Jawa : </p><p id="jawa-percentage">0%</p>
+
         <div class="percentage-bar">
           <div class="percentage-fill" id="jawa-bar" style="width: 0%"></div>
         </div>
-        <p id="jawa-percentage">0%</p>
         
-        <p>Sunda:</p>
+        <p>Sunda : </p><p id="sunda-percentage">0%</p>
         <div class="percentage-bar">
           <div class="percentage-fill" id="sunda-bar" style="width: 0%"></div>
         </div>
-        <p id="sunda-percentage">0%</p>
         
         <p id="dominant-keturunan">Keturunan dominan: -</p>
+        <p id="facial-expression">Ekspresi wajah: -</p>
       </div>
       
       <button class="back-btn" id="webcam-back-btn">Kembali ke Menu Utama</button>
     </div>
 
-    <!-- Comparison Screen (Original Interface) -->
     <div id="comparison-screen" class="comparison-screen">
       <h1>DETEKSI WAJAHMU UNTUK MELIHAT KETURUNAN</h1>
       <form id="uploadForm">
         <input type="file" name="file" accept="image/*" />
         <select id="endpointSelect">
           <option value="/detect">Deteksi Wajah</option>
-          <option value="/compare">Bandingkan Wajah</option>
           <option value="/keturunan">Deteksi Keturunan</option>
         </select>
-        <button type="submit">Kirim ke API</button>
+        <button type="submit">Upload Foto Dan Tunjukan Hasilnya</button>
       </form>
       <div class="result" id="result"></div>
       
@@ -427,6 +430,7 @@
             <p>Nama: ${data.nama}</p>
             <p>Keturunan: ${data.keturunan}</p>
             <p>ID: ${data.id}</p>
+            <p>Ekspresi wajah: <span class="expression-badge">${data.expression || 'Unknown'}</span></p>
           `;
         }
       } catch (error) {
@@ -461,6 +465,14 @@
           
           if (endpoint === '/detect') {
             result.innerHTML += `<p>Jumlah wajah yang terdeteksi: ${data.faces_detected}</p>`;
+            
+            if (data.expressions && data.expressions.length > 0) {
+              result.innerHTML += '<p>Ekspresi wajah:</p>';
+              data.expressions.forEach((expression, index) => {
+                result.innerHTML += `<p>Wajah ${index + 1}: <span class="expression-badge">${expression}</span></p>`;
+              });
+            }
+            
             if (data.image_path) {
               result.innerHTML += `<img src="${data.image_path}" alt="Wajah terdeteksi" />`;
             }
@@ -468,7 +480,11 @@
             if (data.results.length > 0) {
               result.innerHTML += '<h3>Wajah Serupa yang Ditemukan:</h3><ul>';
               data.results.forEach(person => {
-                result.innerHTML += `<li>${person.nama} (${person.keturunan}) - Kemiripan: ${(person.similarity * 100).toFixed(0)}%</li>`;
+                result.innerHTML += `
+                  <li>
+                    ${person.nama} (${person.keturunan}) - Kemiripan: ${(person.similarity * 100).toFixed(0)}%
+                    ${person.expression ? `<br>Ekspresi: <span class="expression-badge">${person.expression}</span>` : ''}
+                  </li>`;
               });
               result.innerHTML += '</ul>';
             } else {
@@ -476,9 +492,13 @@
             }
             result.innerHTML += `<p>Ambang batas yang digunakan: ${(data.threshold * 100).toFixed(0)}%</p>`;
           } else if (endpoint === '/keturunan') {
-            result.innerHTML += `<h3>Hasil Deteksi Keturunan:</h3>`;
-            result.innerHTML += `<p>Keturunan dominan: ${data.dominant_keturunan}</p>`;
-            result.innerHTML += '<p>Prediksi:</p><ul>';
+            result.innerHTML += `<p>Keturunan dominan : ${data.dominant_keturunan}</p>`;
+            
+            if (data.expression) {
+              result.innerHTML += `<p>Ekspresi wajah: <span class="expression-badge">${data.expression}</span></p>`;
+            }
+            
+            result.innerHTML += '<p>Perkiraan Cenderung Ke - :</p><ul>';
             data.predictions.forEach(pred => {
               result.innerHTML += `<li>${pred.keturunan}: ${(pred.confidence * 100).toFixed(0)}%</li>`;
             });
@@ -642,6 +662,12 @@
       document.getElementById('sunda-percentage').textContent = `${sundaValue.toFixed(0)}%`;
       
       document.getElementById('dominant-keturunan').textContent = `Keturunan dominan: ${data.dominant_keturunan}`;
+      
+      if (data.expression) {
+        document.getElementById('facial-expression').innerHTML = `Ekspresi wajah: <span class="expression-badge">${data.expression}</span>`;
+      } else {
+        document.getElementById('facial-expression').textContent = 'Ekspresi wajah: -';
+      }
     }
   </script>
 </body>

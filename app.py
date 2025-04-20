@@ -16,16 +16,7 @@ import json
 import csv
 from pydantic import BaseModel
 from typing import List, Optional
-
-try:
-    from deepface import DeepFace
-except ImportError:
-    print("DeepFace not installed. Please install with: pip install deepface")
-    class DeepFaceStub:
-        @staticmethod
-        def represent(img, model_name=None, enforce_detection=True):
-            return [{"embedding": np.random.default_rng().random(128).tolist()}]
-    DeepFace = DeepFaceStub()
+from deepface import DeepFace
 
 try:
     import tensorflow as tf
@@ -44,6 +35,7 @@ UNSUPPORTED_FORMAT_ERROR = "Unsupported file format. Please upload a JPG or PNG 
 IMAGE_READ_ERROR = "Could not read image file"
 NO_FACES_ERROR = "No faces detected in the image"
 FACE_EXTRACT_ERROR = "Could not extract face from image"
+EXPRESSION_DETECT_ERROR = "Could not detect facial expression"
 
 os.makedirs("uploads", exist_ok=True)
 os.makedirs("results", exist_ok=True)
@@ -51,9 +43,6 @@ os.makedirs("models", exist_ok=True)
 os.makedirs("database", exist_ok=True)
 os.makedirs("templates", exist_ok=True)
 os.makedirs("dataset_wajah", exist_ok=True)
-
-print("Current working dir:", os.getcwd())
-print("Template path exists:", os.path.exists("templates/index.html"))
 
 app = FastAPI(
     title="Face Recognition and Ethnicity Detection API",
@@ -85,7 +74,7 @@ class EthnicityClassificationModel:
         
     def predict(self, face_img):
         _ = cv2.resize(face_img, (224, 224)) 
-        rng = np.random.default_rng()
+        rng = np.random.default_rng(seed=42)
         probs = rng.random(len(self.suku))
         probs = probs / np.sum(probs)
         
@@ -202,12 +191,15 @@ class Person(BaseModel):
 class FaceDetectionResponse(BaseModel):
     faces_detected: int
     image_path: str
+    expressions: List[str]
+    lighting: str
 
 class SimilarityResult(BaseModel):
     person_id: str
     nama: str
     keturunan: str
     similarity: float
+    expression: str
 
 class SimilarityResponse(BaseModel):
     results: List[SimilarityResult]
@@ -220,6 +212,8 @@ class EthnicityPrediction(BaseModel):
 class EthnicityResponse(BaseModel):
     predictions: List[EthnicityPrediction]
     dominant_keturunan: str
+    lighting: str
+    expression: str
     image_path: str
 
 class PersonResponse(BaseModel):
@@ -227,6 +221,7 @@ class PersonResponse(BaseModel):
     nama: str
     keturunan: str
     embedding_count: int
+    expression: Optional[str] = None
 
 def read_image_file(file) -> np.ndarray:
     contents = file.file.read()
@@ -277,9 +272,10 @@ def extract_face(image, face_data, required_size=(160, 160)):
     else:
         return None
 
-def draw_faces(image, faces):
+def draw_faces(image, faces, expressions=None, include_expression=True):
     img_copy = image.copy()
-    for face in faces:
+    
+    for i, face in enumerate(faces):
         x, y, width, height = face['box']
         x, y = max(0, x), max(0, y)
         cv2.rectangle(img_copy, (x, y), (x+width, y+height), (0, 255, 0), 2)
@@ -287,8 +283,39 @@ def draw_faces(image, faces):
         keypoints = face['keypoints']
         for point in keypoints.values():
             cv2.circle(img_copy, point, 2, (0, 0, 255), 2)
+        
+        # Add expression if available and requested
+        if include_expression and expressions and i < len(expressions):
+            label = f"Expression: {expressions[i]}"
+            cv2.putText(img_copy, label, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             
     return img_copy
+
+def detect_lighting(image):
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    avg_brightness = np.mean(gray)
+    if avg_brightness < 100:
+        return "Redup"
+    else:
+        return "Terang"
+
+def detect_expression(face_img):
+    try:
+        analysis = DeepFace.analyze(face_img, actions=['emotion'], enforce_detection=False)
+        dominant_emotion = analysis[0]['dominant_emotion']
+        emotion_map = {
+            'happy': 'Senyum',
+            'sad': 'Sedih',
+            'angry': 'Marah',
+            'surprise': 'Terkejut',
+            'neutral': 'Datar',
+            'fear': 'Serius',
+            'disgust': 'Serius'
+        }
+        return emotion_map.get(dominant_emotion, 'Unknown')
+    except Exception as e:
+        print(f"Error detecting expression: {e}")
+        return "Unknown"
 
 @app.get("/")
 async def root(request: Request):
@@ -313,65 +340,37 @@ async def detect_faces_endpoint(file: UploadFile = File(...)):
             raise HTTPException(status_code=400, detail=IMAGE_READ_ERROR)
         
         faces = detect_faces(image)
+        if not faces:
+            raise HTTPException(status_code=400, detail=NO_FACES_ERROR)
         
-        result_image = draw_faces(image, faces)
+        # Detect expressions for all faces
+        expressions = []
+        for face_data in faces:
+            face_img = extract_face(image, face_data)
+            if face_img is not None:
+                expression = detect_expression(face_img)
+                expressions.append(expression)
+            else:
+                expressions.append("Unknown")
+        
+        # Get lighting condition
+        lighting = detect_lighting(image)
+        
+        # Draw faces with expressions
+        result_image = draw_faces(image, faces, expressions, include_expression=True)
         
         result_path = os.path.join("results", unique_filename)
         cv2.imwrite(result_path, result_image)
         
         return {
             "faces_detected": len(faces),
-            "image_path": f"/static/{unique_filename}"
+            "image_path": f"/static/{unique_filename}",
+            "expressions": expressions,
+            "lighting": lighting
         }
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
-
-@app.post("/compare")
-async def compare_faces_endpoint(
-    file: UploadFile = File(...),
-    threshold: float = Form(0.6)
-):
-    try:
-        threshold = max(0.0, min(1.0, threshold))
-        
-        if not file.filename.lower().endswith(ALLOWED_EXTENSIONS):
-            raise HTTPException(status_code=400, detail=UNSUPPORTED_FORMAT_ERROR)
-        
-        timestamp = int(time.time())
-        file_extension = os.path.splitext(file.filename)[1]
-        unique_filename = f"face_comparison_{timestamp}{file_extension}"
-        
-        upload_path = os.path.join("uploads", unique_filename)
-        await file.seek(0)
-        save_uploaded_file(file, upload_path)
-        
-        image = cv2.imread(upload_path)
-        if image is None:
-            raise HTTPException(status_code=400, detail=IMAGE_READ_ERROR)
-        
-        faces = detect_faces(image)
-        if not faces:
-            raise HTTPException(status_code=400, detail=NO_FACES_ERROR)
-        
-        faces.sort(key=lambda x: x['confidence'], reverse=True)
-        main_face = faces[0]
-        
-        face_img = extract_face(image, main_face)
-        if face_img is None:
-            raise HTTPException(status_code=400, detail=FACE_EXTRACT_ERROR)
-        
-        embedding = face_embedding_model.get_embedding(face_img)
-        
-        similar_faces = db.find_similar_faces(embedding, threshold)
-        
-        return {
-            "results": similar_faces,
-            "threshold": threshold
-        }
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error comparing faces: {str(e)}")
 
 @app.post("/keturunan", response_model=EthnicityResponse)
 async def detect_ethnicity_endpoint(file: UploadFile = File(...)):
@@ -406,11 +405,18 @@ async def detect_ethnicity_endpoint(file: UploadFile = File(...)):
         
         dominant_ethnicity = max(ethnicity_predictions.items(), key=lambda x: x[1])[0]
         
+        lighting = detect_lighting(image)
+        expression = detect_expression(face_img)
+        
         result_image = draw_faces(image, [main_face])
         
         x, y, _, _ = main_face['box']
-        label = f"{dominant_ethnicity}: {ethnicity_predictions[dominant_ethnicity]:.2f}"
-        cv2.putText(result_image, label, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        ethnicity_label = f"{dominant_ethnicity}: {ethnicity_predictions[dominant_ethnicity]:.2f}"
+        cv2.putText(result_image, ethnicity_label, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        
+        # Add expression information
+        expression_label = f"Expression: {expression}"
+        cv2.putText(result_image, expression_label, (x, y-30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
         
         result_path = os.path.join("results", unique_filename)
         cv2.imwrite(result_path, result_image)
@@ -424,6 +430,8 @@ async def detect_ethnicity_endpoint(file: UploadFile = File(...)):
         return {
             "predictions": formatted_predictions,
             "dominant_keturunan": dominant_ethnicity,
+            "lighting": lighting,
+            "expression": expression,
             "image_path": f"/static/{unique_filename}"
         }
         
@@ -474,88 +482,113 @@ async def register_person_endpoint(
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error generating face embedding: {str(e)}")
         
+        # Detect expression
+        expression = detect_expression(face_img)
+        
         person_id = db.add_person(nama, keturunan, embedding)
         
         person = db.get_person(person_id)
         if not person:
             raise HTTPException(status_code=500, detail="Failed to retrieve registered person data.")
         
+        # Add expression to response
+        person["expression"] = expression
+        
         return person
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error registering person: {str(e)}")
 
-def process_image_for_import(file_path: str, metadata: dict, filename: str, failed_files: List[str]):
-    image = cv2.imread(file_path)
-    if image is None:
-        failed_files.append(f"{filename}: Could not read image")
-        return None, None, None
+def load_metadata(metadata_path):
+    metadata = {}
+    if metadata_path and os.path.exists(metadata_path):
+        with open(metadata_path, 'r', encoding='utf-8') as f:
+            sample = f.read(1024)
+            f.seek(0)
+            sniffer = csv.Sniffer()
+            dialect = sniffer.sniff(sample)
+            reader = csv.DictReader(f, dialect=dialect)
+            for row in reader:
+                filename = row.get('filename', '')
+                if filename:
+                    keturunan = row.get('keturunan', '').capitalize()
+                    if keturunan not in ["Jawa", "Sunda", "Cina"]:
+                        keturunan = 'Unknown'
+                    metadata[filename] = {
+                        'nama': row.get('nama', os.path.splitext(filename)[0]),
+                        'keturunan': keturunan
+                    }
+    return metadata
 
-    faces = detect_faces(image)
-    if not faces:
-        failed_files.append(f"{filename}: No faces detected")
-        return None, None, None
-
-    faces.sort(key=lambda x: x['confidence'], reverse=True)
-    main_face = faces[0]
-
-    face_img = extract_face(image, main_face)
-    if face_img is None:
-        failed_files.append(f"{filename}: Could not extract face")
-        return None, None, None
-
+def process_image(file_path, metadata, filename):
+    if filename in metadata:
+        nama = metadata[filename].get('nama', os.path.splitext(filename)[0])
+        keturunan = metadata[filename].get('keturunan', 'Unknown')
+    else:
+        nama = os.path.splitext(filename)[0]
+        keturunan = 'Unknown'
+        filename_lower = filename.lower()
+        if 'cina' in filename_lower:
+            keturunan = 'Cina'
+        elif 'jawa' in filename_lower:
+            keturunan = 'Jawa'
+        elif 'sunda' in filename_lower:
+            keturunan = 'Sunda'
+    
     try:
+        image = cv2.imread(file_path)
+        if image is None:
+            return False, "Could not read image"
+        
+        faces = detect_faces(image)
+        if not faces:
+            return False, "No faces detected"
+        
+        faces.sort(key=lambda x: x['confidence'], reverse=True)
+        main_face = faces[0]
+        
+        face_img = extract_face(image, main_face)
+        if face_img is None:
+            return False, "Could not extract face"
+        
         embedding = face_embedding_model.get_embedding(face_img)
+        
+        if keturunan not in ["Jawa", "Sunda", "Cina", "Unknown"]:
+            keturunan = "Unknown"
+        
+        db.add_person(nama, keturunan, embedding)
+        return True, ""
     except Exception as e:
-        failed_files.append(f"{filename}: Error generating embedding - {str(e)}")
-        return None, None, None
-
-    nama = metadata.get(filename, {}).get('nama', os.path.splitext(filename)[0])
-    keturunan = metadata.get(filename, {}).get('keturunan', "Unknown")
-
-    if keturunan not in ["Jawa", "Sunda", "Cina", "Unknown"]:
-        failed_files.append(f"{filename}: Invalid keturunan")
-        return None, None, None
-
-    return nama, keturunan, embedding
+        return False, str(e)
 
 @app.post("/import_dataset")
 async def import_dataset_endpoint(dataset_path: str = Form(...), metadata_path: Optional[str] = Form(None)):
     try:
         if not os.path.exists(dataset_path):
             raise HTTPException(status_code=400, detail=f"Dataset path {dataset_path} does not exist")
-
+        
+        metadata = load_metadata(metadata_path)
+        
         imported_count = 0
         failed_files = []
-        
-        metadata = {}
-        if metadata_path and os.path.exists(metadata_path):
-            with open(metadata_path, 'r') as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    metadata[row['filename']] = {
-                        'nama': row['nama'],
-                        'keturunan': row['keturunan']
-                    }
         
         for filename in os.listdir(dataset_path):
             if not filename.lower().endswith(ALLOWED_EXTENSIONS):
                 continue
                 
             file_path = os.path.join(dataset_path, filename)
-            nama, keturunan, embedding = process_image_for_import(file_path, metadata, filename, failed_files)
-            
-            if embedding is not None:
-                db.add_person(nama, keturunan, embedding)
+            success, error = process_image(file_path, metadata, filename)
+            if success:
                 imported_count += 1
-            
+            else:
+                failed_files.append(f"{filename}: {error}")
+        
         return {
             "status": "success",
             "imported_count": imported_count,
             "failed_files": failed_files,
             "message": f"Imported {imported_count} faces. {len(failed_files)} files failed."
         }
-        
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error importing dataset: {str(e)}")
 
@@ -597,11 +630,17 @@ async def add_face_to_person(
         
         embedding = face_embedding_model.get_embedding(face_img)
         
+        # Detect expression
+        expression = detect_expression(face_img)
+        
         success = db.add_embedding_to_person(person_id, embedding)
         if not success:
             raise HTTPException(status_code=500, detail="Failed to add face to person")
         
-        return db.get_person(person_id)
+        person_info = db.get_person(person_id)
+        person_info["expression"] = expression
+        
+        return person_info
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error adding face to person: {str(e)}")

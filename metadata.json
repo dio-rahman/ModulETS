@@ -1,0 +1,44 @@
+{
+    "dataset_info": {
+        "total_images": 132,
+        "classes": ["Jawa", "Sunda", "Cina"],
+        "description": "Dataset wajah untuk pengenalan etnis berdasarkan keturunan Jawa, Sunda, dan Cina",
+        "version": "1.0.0",
+        "created_by": "Tim Pengembang",
+        "creation_date": "2024-04-21"
+    },
+    "statistics": {
+        "image_formats": ["jpg", "jpeg", "png"],
+        "image_count_by_class": {
+            "Jawa": 49,
+            "Sunda": 56,
+            "Cina": 27
+        },
+        "expression_distribution": {
+            "serius": 64,
+            "senyum": 51,
+            "terkejut": 4,
+            "cemberut": 2,
+            "datar": 5,
+            "marah": 2,
+            "berpikir": 1,
+            "merem": 3
+        },
+        "position_distribution": {
+            "frontal": 106,
+            "miring": 22,
+            "profile": 4
+        },
+        "lighting_distribution": {
+            "terang": 102,
+            "redup": 30
+        },
+        "distance_distribution": {
+            "dekat": 77,
+        "sedang": 42,
+            "jauh": 13
+        }
+    },
+    "metadata_source": "metadata.csv",
+    "notes": "Dataset ini digunakan untuk pelatihan model pengenalan wajah dan klasifikasi etnis. Data diambil dari metadata.csv dan dianalisis untuk distribusi ekspresi, posisi, pencahayaan, dan jarak."
+}
