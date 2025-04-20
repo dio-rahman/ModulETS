@@ -17,7 +17,6 @@ import csv
 from pydantic import BaseModel
 from typing import List, Optional
 
-# Optional dependencies
 try:
     from deepface import DeepFace
 except ImportError:
@@ -40,14 +39,12 @@ except ImportError:
     print("MTCNN not installed. Please install with: pip install mtcnn")
     detector = None
 
-# Constants for repeated strings
 ALLOWED_EXTENSIONS = ('.jpg', '.jpeg', '.png')
 UNSUPPORTED_FORMAT_ERROR = "Unsupported file format. Please upload a JPG or PNG image."
 IMAGE_READ_ERROR = "Could not read image file"
 NO_FACES_ERROR = "No faces detected in the image"
 FACE_EXTRACT_ERROR = "Could not extract face from image"
 
-# Create necessary directories
 os.makedirs("uploads", exist_ok=True)
 os.makedirs("results", exist_ok=True)
 os.makedirs("models", exist_ok=True)
@@ -87,7 +84,7 @@ class EthnicityClassificationModel:
         self.suku = ["Jawa", "Sunda", "Cina"]
         
     def predict(self, face_img):
-        _ = cv2.resize(face_img, (224, 224))  # Processed but not stored
+        _ = cv2.resize(face_img, (224, 224)) 
         rng = np.random.default_rng()
         probs = rng.random(len(self.suku))
         probs = probs / np.sum(probs)
