@@ -56,6 +56,32 @@
       text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
     }
 
+    .welcome-title {
+      font-size: 3rem;
+      font-weight: 900;
+      margin-bottom: 2rem;
+      background: linear-gradient(45deg, #3498db, #e74c3c, #2ecc71);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      animation: titlePulse 3s ease infinite;
+    }
+
+    @keyframes titlePulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    .welcome-subtitle {
+      font-size: 1.2rem;
+      margin-bottom: 2.5rem;
+      line-height: 1.6;
+      color: #ecf0f1;
+      opacity: 0.9;
+    }
+
     input[type="file"], input[type="text"] {
       display: block;
       margin: 1.5rem auto;
@@ -118,6 +144,25 @@
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
     }
 
+    .feature-btn {
+      margin: 1rem 0;
+      background: linear-gradient(45deg, #3498db, #9b59b6);
+      font-size: 1.1rem;
+    }
+
+    .feature-btn.green {
+      background: linear-gradient(45deg, #2ecc71, #3498db);
+    }
+
+    .feature-btn.orange {
+      background: linear-gradient(45deg, #e74c3c, #f39c12);
+    }
+
+    .feature-btn:hover {
+      transform: translateY(-5px) scale(1.03);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+    }
+
     .result {
       margin-top: 2rem;
       padding: 1.5rem;
@@ -165,113 +210,439 @@
       color: #bdc3c7;
       opacity: 0.7;
     }
+
+    .back-btn {
+      margin-top: 2rem;
+      font-size: 0.9rem;
+      padding: 0.6rem;
+      background: rgba(255, 255, 255, 0.1);
+      text-transform: none;
+    }
+
+    .webcam-container {
+      width: 100%;
+      margin: 1.5rem auto;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    #webcam, #webcam-canvas {
+      width: 100%;
+      border-radius: 10px;
+    }
+
+    .webcam-buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 1rem;
+    }
+
+    .webcam-buttons button {
+      flex: 1;
+    }
+
+    .detection-result {
+      margin-top: 1.5rem;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 1rem;
+      border-radius: 10px;
+    }
+
+    .percentage-bar {
+      height: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      margin: 0.5rem 0 1rem 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .percentage-fill {
+      height: 100%;
+      background: linear-gradient(45deg, #3498db, #9b59b6);
+      border-radius: 10px;
+      transition: width 0.3s ease;
+    }
+
+    .welcome-screen, .dataset-upload-screen, .webcam-detection-screen, .comparison-screen {
+      display: none;
+    }
+
+    .active-screen {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>DETEKSI WAJAHMU UNTUK MELIHAT KETURUNAN</h1>
-    <form id="uploadForm">
-      <input type="file" name="file" accept="image/*" />
-      <input type="text" name="name" placeholder="Masukkan Nama Disini" />
-      <select name="keturunan">
-        <option value="Jawa">Jawa</option>
-        <option value="Sunda">Sunda</option>
-        <option value="Batak">Batak</option>
-      </select>
-      <select id="endpointSelect">
-        <option value="/detect">Deteksi Wajah</option>
-        <option value="/compare">Bandingkan Wajah</option>
-        <option value="/keturunan">Deteksi Keturunan</option>
-        <option value="/register">Daftarkan Wajah</option>
-        <option value="/import_dataset">Impor Dataset</option>
-      </select>
-      <input type="text" name="dataset_path" placeholder="Masukkan path folder dataset (misalnya, ./dataset_wajah)" />
-      <input type="text" name="metadata_path" placeholder="Masukkan path file metadata (opsional, misalnya, ./dataset_wajah/metadata.csv)" />
-      <button type="submit">Kirim ke API</button>
-    </form>
-    <div class="result" id="result"></div>
+    <!-- Welcome Screen -->
+    <div id="welcome-screen" class="welcome-screen active-screen">
+      <h1 class="welcome-title">SELAMAT DATANG</h1>
+      <p class="welcome-subtitle">Deteksi wajah dan keturunan dengan teknologi pengenalan wajah canggih. Pilih salah satu fitur di bawah ini:</p>
+      
+      <button id="dataset-upload-btn" class="feature-btn green">Upload Dataset Wajah</button>
+      <button id="webcam-detection-btn" class="feature-btn">Deteksi Realtime dengan Kamera</button>
+      <button id="comparison-btn" class="feature-btn orange">Bandingkan Wajah</button>
+    </div>
+
+    <!-- Dataset Upload Screen -->
+    <div id="dataset-upload-screen" class="dataset-upload-screen">
+      <h1>UPLOAD DATASET WAJAH</h1>
+      
+      <form id="uploadDatasetForm">
+        <input type="file" name="file" accept="image/*" required />
+        <input type="text" name="name" placeholder="Masukkan Nama Disini" required />
+        <select name="keturunan" required>
+          <option value="" disabled selected>Pilih Keturunan</option>
+          <option value="Cina">Cina</option>
+          <option value="Jawa">Jawa</option>
+          <option value="Sunda">Sunda</option>
+        </select>
+        <button type="submit">Upload ke Dataset</button>
+      </form>
+      
+      <div class="result" id="upload-result"></div>
+      
+      <button class="back-btn" id="upload-back-btn">Kembali ke Menu Utama</button>
+    </div>
+
+    <!-- Webcam Detection Screen -->
+    <div id="webcam-detection-screen" class="webcam-detection-screen">
+      <h1>DETEKSI KETURUNAN REALTIME</h1>
+      
+      <div class="webcam-container">
+        <video id="webcam" autoplay playsinline></video>
+        <canvas id="webcam-canvas" style="display: none;"></canvas>
+      </div>
+      
+      <div class="webcam-buttons">
+        <button id="start-webcam-btn">Mulai Kamera</button>
+        <button id="capture-btn" disabled>Tangkap Gambar</button>
+      </div>
+      
+      <div class="detection-result" id="webcam-result">
+        <h3>Hasil Deteksi:</h3>
+        
+        <p>Cina:</p>
+        <div class="percentage-bar">
+          <div class="percentage-fill" id="cina-bar" style="width: 0%"></div>
+        </div>
+        <p id="cina-percentage">0%</p>
+        
+        <p>Jawa:</p>
+        <div class="percentage-bar">
+          <div class="percentage-fill" id="jawa-bar" style="width: 0%"></div>
+        </div>
+        <p id="jawa-percentage">0%</p>
+        
+        <p>Sunda:</p>
+        <div class="percentage-bar">
+          <div class="percentage-fill" id="sunda-bar" style="width: 0%"></div>
+        </div>
+        <p id="sunda-percentage">0%</p>
+        
+        <p id="dominant-keturunan">Keturunan dominan: -</p>
+      </div>
+      
+      <button class="back-btn" id="webcam-back-btn">Kembali ke Menu Utama</button>
+    </div>
+
+    <!-- Comparison Screen (Original Interface) -->
+    <div id="comparison-screen" class="comparison-screen">
+      <h1>DETEKSI WAJAHMU UNTUK MELIHAT KETURUNAN</h1>
+      <form id="uploadForm">
+        <input type="file" name="file" accept="image/*" />
+        <select id="endpointSelect">
+          <option value="/detect">Deteksi Wajah</option>
+          <option value="/compare">Bandingkan Wajah</option>
+          <option value="/keturunan">Deteksi Keturunan</option>
+        </select>
+        <button type="submit">Kirim ke API</button>
+      </form>
+      <div class="result" id="result"></div>
+      
+      <button class="back-btn" id="comparison-back-btn">Kembali ke Menu Utama</button>
+    </div>
   </div>
 
   <script>
+    document.getElementById('dataset-upload-btn').addEventListener('click', () => {
+      showScreen('dataset-upload-screen');
+    });
+    
+    document.getElementById('webcam-detection-btn').addEventListener('click', () => {
+      showScreen('webcam-detection-screen');
+    });
+    
+    document.getElementById('comparison-btn').addEventListener('click', () => {
+      showScreen('comparison-screen');
+    });
+    
+    document.getElementById('upload-back-btn').addEventListener('click', () => {
+      showScreen('welcome-screen');
+    });
+    
+    document.getElementById('webcam-back-btn').addEventListener('click', () => {
+      stopWebcam();
+      showScreen('welcome-screen');
+    });
+    
+    document.getElementById('comparison-back-btn').addEventListener('click', () => {
+      showScreen('welcome-screen');
+    });
+    
+    function showScreen(screenId) {
+      document.querySelectorAll('.welcome-screen, .dataset-upload-screen, .webcam-detection-screen, .comparison-screen').forEach(screen => {
+        screen.classList.remove('active-screen');
+      });
+      
+      document.getElementById(screenId).classList.add('active-screen');
+    }
+    
+    document.getElementById('uploadDatasetForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const form = e.target;
+      const formData = new FormData(form);
+      
+      try {
+        const res = await fetch('http://127.0.0.1:8000/register', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        const result = document.getElementById('upload-result');
+        result.innerHTML = '';
+        
+        if (!res.ok) {
+          const err = await res.json();
+          result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${err.detail}</p>`;
+        } else {
+          const data = await res.json();
+          result.innerHTML = `
+            <h3>Upload Berhasil</h3>
+            <p>Nama: ${data.nama}</p>
+            <p>Keturunan: ${data.keturunan}</p>
+            <p>ID: ${data.id}</p>
+          `;
+        }
+      } catch (error) {
+        document.getElementById('upload-result').innerHTML = `
+          <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+          <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+        `;
+      }
+    });
+    
     document.getElementById('uploadForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-
+      
       const form = e.target;
       const formData = new FormData(form);
       const endpoint = document.getElementById('endpointSelect').value;
-
-      if (endpoint !== '/register' && endpoint !== '/import_dataset') {
-        formData.delete('name');
-        formData.delete('keturunan');
-        formData.delete('dataset_path');
-        formData.delete('metadata_path');
-      } else if (endpoint === '/import_dataset') {
-        formData.delete('file');
-        formData.delete('name');
-        formData.delete('keturunan');
-      }
-
-      const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      const result = document.getElementById('result');
-      result.innerHTML = '';
-
-      if (!res.ok) {
-        const err = await res.json();
-        result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${err.detail}</p>`;
-      } else {
-        const data = await res.json();
+      
+      try {
+        const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+          method: 'POST',
+          body: formData,
+        });
         
-        if (endpoint === '/detect') {
-          result.innerHTML += `<p>Jumlah wajah yang terdeteksi: ${data.faces_detected}</p>`;
-          if (data.image_path) {
-            result.innerHTML += `<img src="${data.image_path}" alt="Wajah terdeteksi" />`;
-          }
-        } else if (endpoint === '/compare') {
-          if (data.results.length > 0) {
-            result.innerHTML += '<h3>Wajah Serupa yang Ditemukan:</h3><ul>';
-            data.results.forEach(person => {
-              result.innerHTML += `<li>${person.nama} (${person.keturunan}) - Kemiripan: ${(person.similarity * 100).toFixed(0)}%</li>`;
+        const result = document.getElementById('result');
+        result.innerHTML = '';
+        
+        if (!res.ok) {
+          const err = await res.json();
+          result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${err.detail}</p>`;
+        } else {
+          const data = await res.json();
+          
+          if (endpoint === '/detect') {
+            result.innerHTML += `<p>Jumlah wajah yang terdeteksi: ${data.faces_detected}</p>`;
+            if (data.image_path) {
+              result.innerHTML += `<img src="${data.image_path}" alt="Wajah terdeteksi" />`;
+            }
+          } else if (endpoint === '/compare') {
+            if (data.results.length > 0) {
+              result.innerHTML += '<h3>Wajah Serupa yang Ditemukan:</h3><ul>';
+              data.results.forEach(person => {
+                result.innerHTML += `<li>${person.nama} (${person.keturunan}) - Kemiripan: ${(person.similarity * 100).toFixed(0)}%</li>`;
+              });
+              result.innerHTML += '</ul>';
+            } else {
+              result.innerHTML += '<p>Tidak ada wajah serupa yang ditemukan di database.</p>';
+            }
+            result.innerHTML += `<p>Ambang batas yang digunakan: ${(data.threshold * 100).toFixed(0)}%</p>`;
+          } else if (endpoint === '/keturunan') {
+            result.innerHTML += `<h3>Hasil Deteksi Keturunan:</h3>`;
+            result.innerHTML += `<p>Keturunan dominan: ${data.dominant_keturunan}</p>`;
+            result.innerHTML += '<p>Prediksi:</p><ul>';
+            data.predictions.forEach(pred => {
+              result.innerHTML += `<li>${pred.keturunan}: ${(pred.confidence * 100).toFixed(0)}%</li>`;
             });
             result.innerHTML += '</ul>';
-          } else {
-            result.innerHTML += '<p>Tidak ada wajah serupa yang ditemukan di database.</p>';
-          }
-          result.innerHTML += `<p>Ambang batas yang digunakan: ${(data.threshold * 100).toFixed(0)}%</p>`;
-        } else if (endpoint === '/keturunan') {
-          result.innerHTML += `<h3>Hasil Deteksi Keturunan:</h3>`;
-          result.innerHTML += `<p>Keturunan dominan: ${data.dominant_keturunan}</p>`;
-          result.innerHTML += '<p>Prediksi:</p><ul>';
-          data.predictions.forEach(pred => {
-            result.innerHTML += `<li>${pred.keturunan}: ${(pred.confidence * 100).toFixed(0)}%</li>`;
-          });
-          result.innerHTML += '</ul>';
-          if (data.image_path) {
-            result.innerHTML += `<img src="${data.image_path}" alt="Deteksi keturunan" />`;
-          }
-        } else if (endpoint === '/register') {
-          result.innerHTML += `<h3>Pendaftaran Berhasil</h3>`;
-          result.innerHTML += `<p>Nama: ${data.nama}</p>`;
-          result.innerHTML += `<p>Keturunan: ${data.keturunan}</p>`;
-          result.innerHTML += `<p>ID: ${data.id}</p>`;
-          result.innerHTML += `<p>Jumlah embedding: ${data.embedding_count}</p>`;
-        } else if (endpoint === '/import_dataset') {
-          result.innerHTML += `<h3>Impor Dataset Berhasil</h3>`;
-          result.innerHTML += `<p>Jumlah wajah yang diimpor: ${data.imported_count}</p>`;
-          result.innerHTML += `<p>Pesan: ${data.message}</p>`;
-          if (data.failed_files.length > 0) {
-            result.innerHTML += '<p>File yang gagal:</p><ul>';
-            data.failed_files.forEach(file => {
-              result.innerHTML += `<li>${file}</li>`;
-            });
-            result.innerHTML += '</ul>';
+            if (data.image_path) {
+              result.innerHTML += `<img src="${data.image_path}" alt="Deteksi keturunan" />`;
+            }
           }
         }
+      } catch (error) {
+        document.getElementById('result').innerHTML = `
+          <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+          <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+        `;
       }
     });
+    
+    let videoStream = null;
+    const webcamElement = document.getElementById('webcam');
+    const canvasElement = document.getElementById('webcam-canvas');
+    const startWebcamBtn = document.getElementById('start-webcam-btn');
+    const captureBtn = document.getElementById('capture-btn');
+    
+    startWebcamBtn.addEventListener('click', async () => {
+      try {
+        videoStream = await navigator.mediaDevices.getUserMedia({ 
+          video: true, 
+          audio: false 
+        });
+        webcamElement.srcObject = videoStream;
+        startWebcamBtn.disabled = true;
+        captureBtn.disabled = false;
+        
+        startRealTimeDetection();
+      } catch (error) {
+        document.getElementById('webcam-result').innerHTML = `
+          <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+          <p>Pastikan browser memiliki akses ke kamera</p>
+        `;
+      }
+    });
+    
+    captureBtn.addEventListener('click', () => {
+      const context = canvasElement.getContext('2d');
+      
+      canvasElement.width = webcamElement.videoWidth;
+      canvasElement.height = webcamElement.videoHeight;
+      
+      context.drawImage(webcamElement, 0, 0, canvasElement.width, canvasElement.height);
+      
+      canvasElement.toBlob(async (blob) => {
+        const formData = new FormData();
+        formData.append('file', blob, 'webcam.jpg');
+        
+        try {
+          const res = await fetch('http://127.0.0.1:8000/keturunan', {
+            method: 'POST',
+            body: formData,
+          });
+          
+          if (!res.ok) {
+            const err = await res.json();
+            alert(`Error: ${err.detail}`);
+          } else {
+            const data = await res.json();
+            updateKeturunanResults(data);
+          }
+        } catch (error) {
+          alert(`Error: ${error.message}`);
+        }
+      }, 'image/jpeg');
+    });
+    
+    function stopWebcam() {
+      if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
+        webcamElement.srcObject = null;
+        startWebcamBtn.disabled = false;
+        captureBtn.disabled = true;
+        
+        if (detectionInterval) {
+          clearInterval(detectionInterval);
+          detectionInterval = null;
+        }
+      }
+    }
+    
+    let detectionInterval = null;
+    
+    function startRealTimeDetection() {
+      if (detectionInterval) {
+        clearInterval(detectionInterval);
+      }
+      
+      detectionInterval = setInterval(() => {
+        if (videoStream && webcamElement.readyState === 4) {
+          const context = canvasElement.getContext('2d');
+          
+          canvasElement.width = webcamElement.videoWidth;
+          canvasElement.height = webcamElement.videoHeight;
+          
+          context.drawImage(webcamElement, 0, 0, canvasElement.width, canvasElement.height);
+          
+          canvasElement.toBlob(async (blob) => {
+            const formData = new FormData();
+            formData.append('file', blob, 'webcam.jpg');
+            
+            try {
+              const res = await fetch('http://127.0.0.1:8000/keturunan', {
+                method: 'POST',
+                body: formData,
+              });
+              
+              if (res.ok) {
+                const data = await res.json();
+                updateKeturunanResults(data);
+              }
+            } catch (error) {
+              console.error("Real-time detection error:", error);
+            }
+          }, 'image/jpeg');
+        }
+      }, 3000);
+    }
+    
+    function updateKeturunanResults(data) {
+      if (!data.predictions) return;
+      
+      let cinaValue = 0;
+      let jawaValue = 0;
+      let sundaValue = 0;
+      
+      data.predictions.forEach(pred => {
+        const confidence = pred.confidence * 100;
+        
+        switch(pred.keturunan) {
+          case 'Cina':
+            cinaValue = confidence;
+            break;
+          case 'Jawa':
+            jawaValue = confidence;
+            break;
+          case 'Sunda':
+            sundaValue = confidence;
+            break;
+        }
+      });
+      
+      if (cinaValue === 0) {
+        const remaining = 100 - jawaValue - sundaValue;
+        cinaValue = Math.max(0, remaining);
+      }
+      
+      document.getElementById('cina-bar').style.width = `${cinaValue}%`;
+      document.getElementById('jawa-bar').style.width = `${jawaValue}%`;
+      document.getElementById('sunda-bar').style.width = `${sundaValue}%`;
+      
+      document.getElementById('cina-percentage').textContent = `${cinaValue.toFixed(0)}%`;
+      document.getElementById('jawa-percentage').textContent = `${jawaValue.toFixed(0)}%`;
+      document.getElementById('sunda-percentage').textContent = `${sundaValue.toFixed(0)}%`;
+      
+      document.getElementById('dominant-keturunan').textContent = `Keturunan dominan: ${data.dominant_keturunan}`;
+    }
   </script>
 </body>
 </html>

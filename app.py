@@ -1,8 +1,8 @@
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Response
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
-from typing import List, Optional
+from fastapi.templating import Jinja2Templates
 import uvicorn
 import numpy as np
 import cv2
@@ -12,13 +12,21 @@ import uuid
 import time
 from io import BytesIO
 from PIL import Image
-from fastapi.templating import Jinja2Templates
-from fastapi.requests import Request
-from deepface import DeepFace
-from sklearn.metrics.pairwise import cosine_similarity
 import json
 import csv
 from pydantic import BaseModel
+from typing import List, Optional
+
+# Optional dependencies
+try:
+    from deepface import DeepFace
+except ImportError:
+    print("DeepFace not installed. Please install with: pip install deepface")
+    class DeepFaceStub:
+        @staticmethod
+        def represent(img, model_name=None, enforce_detection=True):
+            return [{"embedding": np.random.default_rng().random(128).tolist()}]
+    DeepFace = DeepFaceStub()
 
 try:
     import tensorflow as tf
@@ -27,19 +35,31 @@ except ImportError:
 
 try:
     from mtcnn import MTCNN
+    detector = MTCNN()
 except ImportError:
     print("MTCNN not installed. Please install with: pip install mtcnn")
+    detector = None
 
+# Constants for repeated strings
+ALLOWED_EXTENSIONS = ('.jpg', '.jpeg', '.png')
+UNSUPPORTED_FORMAT_ERROR = "Unsupported file format. Please upload a JPG or PNG image."
+IMAGE_READ_ERROR = "Could not read image file"
+NO_FACES_ERROR = "No faces detected in the image"
+FACE_EXTRACT_ERROR = "Could not extract face from image"
+
+# Create necessary directories
 os.makedirs("uploads", exist_ok=True)
 os.makedirs("results", exist_ok=True)
 os.makedirs("models", exist_ok=True)
 os.makedirs("database", exist_ok=True)
+os.makedirs("templates", exist_ok=True)
+os.makedirs("dataset_wajah", exist_ok=True)
 
 print("Current working dir:", os.getcwd())
 print("Template path exists:", os.path.exists("templates/index.html"))
 
 app = FastAPI(
-    title="Face Recognition and keturunan Detection API",
+    title="Face Recognition and Ethnicity Detection API",
     description="API Pendeteksi Wajah Dan Klasifikasi Etnis",
     version="1.0.0"
 )
@@ -56,25 +76,20 @@ app.add_middleware(
 
 app.mount("/static", StaticFiles(directory="results"), name="static")
 
-try:
-    detector = MTCNN()
-except NameError:
-    print("Warning: MTCNN not available. Face detection will not work.")
-    detector = None
-
 class FaceEmbeddingModel:
     def get_embedding(self, face_img):
         face_img_rgb = cv2.cvtColor(face_img, cv2.COLOR_BGR2RGB)
         embedding = DeepFace.represent(face_img_rgb, model_name="Facenet", enforce_detection=False)
         return np.array(embedding[0]["embedding"])
 
-class keturunanClassificationModel:
+class EthnicityClassificationModel:
     def __init__(self):
-        self.suku = ["Jawa", "Sunda", "Batak"]
+        self.suku = ["Jawa", "Sunda", "Cina"]
         
     def predict(self, face_img):
-        resized = cv2.resize(face_img, (224, 224))
-        probs = np.random.rand(len(self.suku))
+        _ = cv2.resize(face_img, (224, 224))  # Processed but not stored
+        rng = np.random.default_rng()
+        probs = rng.random(len(self.suku))
         probs = probs / np.sum(probs)
         
         predictions = {
@@ -85,7 +100,7 @@ class keturunanClassificationModel:
         return predictions
 
 face_embedding_model = FaceEmbeddingModel()
-keturunan_model = keturunanClassificationModel()
+ethnicity_model = EthnicityClassificationModel()
 
 class Database:
     def __init__(self, db_path="database/embeddings.json"):
@@ -118,6 +133,7 @@ class Database:
                 "embeddings": [emb.tolist() for emb in person_data["embeddings"]]
             }
         
+        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         with open(self.db_path, 'w') as f:
             json.dump(data, f)
             
@@ -166,7 +182,7 @@ class Database:
             for emb in person_embeddings:
                 emb_a = embedding.reshape(1, -1)
                 emb_b = emb.reshape(1, -1)
-                similarity = cosine_similarity(emb_a, emb_b)[0][0]
+                similarity = np.dot(emb_a, emb_b.T)[0][0] / (np.linalg.norm(emb_a) * np.linalg.norm(emb_b))
                 max_similarity = max(max_similarity, similarity)
             
             if max_similarity >= threshold:
@@ -200,12 +216,12 @@ class SimilarityResponse(BaseModel):
     results: List[SimilarityResult]
     threshold: float
 
-class keturunanPrediction(BaseModel):
+class EthnicityPrediction(BaseModel):
     keturunan: str
     confidence: float
 
-class keturunanResponse(BaseModel):
-    predictions: List[keturunanPrediction]
+class EthnicityResponse(BaseModel):
+    predictions: List[EthnicityPrediction]
     dominant_keturunan: str
     image_path: str
 
@@ -221,6 +237,7 @@ def read_image_file(file) -> np.ndarray:
     return cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
 def save_uploaded_file(file: UploadFile, destination: str) -> str:
+    os.makedirs(os.path.dirname(destination), exist_ok=True)
     with open(destination, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     return destination
@@ -277,25 +294,14 @@ def draw_faces(image, faces):
     return img_copy
 
 @app.get("/")
-async def root():
-    return {
-        "message": "Face Recognition and keturunan Detection API",
-        "version": "1.0.0",
-        "endpoints": {
-            "/detect": "Detect faces in an image",
-            "/compare": "Compare faces for similarity",
-            "/keturunan": "Detect keturunan from a face",
-            "/register": "Register a new person",
-            "/people": "List all registered people",
-            "/import_dataset": "Import a dataset of faces"
-        }
-    }
+async def root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 @app.post("/detect", response_model=FaceDetectionResponse)
 async def detect_faces_endpoint(file: UploadFile = File(...)):
     try:
-        if not file.filename.lower().endswith(('.jpg', '.jpeg', '.png')):
-            raise HTTPException(status_code=400, detail="Unsupported file format. Please upload a JPG or PNG image.")
+        if not file.filename.lower().endswith(ALLOWED_EXTENSIONS):
+            raise HTTPException(status_code=400, detail=UNSUPPORTED_FORMAT_ERROR)
         
         timestamp = int(time.time())
         file_extension = os.path.splitext(file.filename)[1]
@@ -307,7 +313,7 @@ async def detect_faces_endpoint(file: UploadFile = File(...)):
         
         image = cv2.imread(upload_path)
         if image is None:
-            raise HTTPException(status_code=400, detail="Could not read image file")
+            raise HTTPException(status_code=400, detail=IMAGE_READ_ERROR)
         
         faces = detect_faces(image)
         
@@ -332,8 +338,8 @@ async def compare_faces_endpoint(
     try:
         threshold = max(0.0, min(1.0, threshold))
         
-        if not file.filename.lower().endswith(('.jpg', '.jpeg', '.png')):
-            raise HTTPException(status_code=400, detail="Unsupported file format. Please upload a JPG or PNG image.")
+        if not file.filename.lower().endswith(ALLOWED_EXTENSIONS):
+            raise HTTPException(status_code=400, detail=UNSUPPORTED_FORMAT_ERROR)
         
         timestamp = int(time.time())
         file_extension = os.path.splitext(file.filename)[1]
@@ -345,18 +351,18 @@ async def compare_faces_endpoint(
         
         image = cv2.imread(upload_path)
         if image is None:
-            raise HTTPException(status_code=400, detail="Could not read image file")
+            raise HTTPException(status_code=400, detail=IMAGE_READ_ERROR)
         
         faces = detect_faces(image)
         if not faces:
-            raise HTTPException(status_code=400, detail="No faces detected in the image")
+            raise HTTPException(status_code=400, detail=NO_FACES_ERROR)
         
         faces.sort(key=lambda x: x['confidence'], reverse=True)
         main_face = faces[0]
         
         face_img = extract_face(image, main_face)
         if face_img is None:
-            raise HTTPException(status_code=400, detail="Could not extract face from image")
+            raise HTTPException(status_code=400, detail=FACE_EXTRACT_ERROR)
         
         embedding = face_embedding_model.get_embedding(face_img)
         
@@ -370,15 +376,15 @@ async def compare_faces_endpoint(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error comparing faces: {str(e)}")
 
-@app.post("/keturunan", response_model=keturunanResponse)
-async def detect_keturunan_endpoint(file: UploadFile = File(...)):
+@app.post("/keturunan", response_model=EthnicityResponse)
+async def detect_ethnicity_endpoint(file: UploadFile = File(...)):
     try:
-        if not file.filename.lower().endswith(('.jpg', '.jpeg', '.png')):
-            raise HTTPException(status_code=400, detail="Unsupported file format. Please upload a JPG or PNG image.")
+        if not file.filename.lower().endswith(ALLOWED_EXTENSIONS):
+            raise HTTPException(status_code=400, detail=UNSUPPORTED_FORMAT_ERROR)
         
         timestamp = int(time.time())
         file_extension = os.path.splitext(file.filename)[1]
-        unique_filename = f"keturunan_detection_{timestamp}{file_extension}"
+        unique_filename = f"ethnicity_detection_{timestamp}{file_extension}"
         
         upload_path = os.path.join("uploads", unique_filename)
         await file.seek(0)
@@ -386,27 +392,27 @@ async def detect_keturunan_endpoint(file: UploadFile = File(...)):
         
         image = cv2.imread(upload_path)
         if image is None:
-            raise HTTPException(status_code=400, detail="Could not read image file")
+            raise HTTPException(status_code=400, detail=IMAGE_READ_ERROR)
         
         faces = detect_faces(image)
         if not faces:
-            raise HTTPException(status_code=400, detail="No faces detected in the image")
+            raise HTTPException(status_code=400, detail=NO_FACES_ERROR)
         
         faces.sort(key=lambda x: x['confidence'], reverse=True)
         main_face = faces[0]
         
         face_img = extract_face(image, main_face, required_size=(224, 224))
         if face_img is None:
-            raise HTTPException(status_code=400, detail="Could not extract face from image")
+            raise HTTPException(status_code=400, detail=FACE_EXTRACT_ERROR)
         
-        keturunan_predictions = keturunan_model.predict(face_img)
+        ethnicity_predictions = ethnicity_model.predict(face_img)
         
-        dominant_keturunan = max(keturunan_predictions.items(), key=lambda x: x[1])[0]
+        dominant_ethnicity = max(ethnicity_predictions.items(), key=lambda x: x[1])[0]
         
         result_image = draw_faces(image, [main_face])
         
-        x, y, width, height = main_face['box']
-        label = f"{dominant_keturunan}: {keturunan_predictions[dominant_keturunan]:.2f}"
+        x, y, _, _ = main_face['box']
+        label = f"{dominant_ethnicity}: {ethnicity_predictions[dominant_ethnicity]:.2f}"
         cv2.putText(result_image, label, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
         
         result_path = os.path.join("results", unique_filename)
@@ -414,18 +420,18 @@ async def detect_keturunan_endpoint(file: UploadFile = File(...)):
         
         formatted_predictions = [
             {"keturunan": eth, "confidence": float(conf)} 
-            for eth, conf in keturunan_predictions.items()
+            for eth, conf in ethnicity_predictions.items()
         ]
         formatted_predictions.sort(key=lambda x: x["confidence"], reverse=True)
         
         return {
             "predictions": formatted_predictions,
-            "dominant_keturunan": dominant_keturunan,
+            "dominant_keturunan": dominant_ethnicity,
             "image_path": f"/static/{unique_filename}"
         }
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error detecting keturunan: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error detecting ethnicity: {str(e)}")
 
 @app.post("/register", response_model=PersonResponse)
 async def register_person_endpoint(
@@ -434,14 +440,14 @@ async def register_person_endpoint(
     keturunan: str = Form(...)
 ):
     try:
-        if not file.filename.lower().endswith(('.jpg', '.jpeg', '.png')):
-            raise HTTPException(status_code=400, detail="Unsupported file format. Please upload a JPG or PNG image.")
+        if not file.filename.lower().endswith(ALLOWED_EXTENSIONS):
+            raise HTTPException(status_code=400, detail=UNSUPPORTED_FORMAT_ERROR)
         
         if not nama.strip():
             raise HTTPException(status_code=400, detail="Nama tidak boleh kosong.")
         
-        if keturunan not in ["Jawa", "Sunda", "Batak"]:
-            raise HTTPException(status_code=400, detail="Keturunan tidak valid. Pilih Jawa, Sunda, atau Batak.")
+        if keturunan not in ["Jawa", "Sunda", "Cina"]:
+            raise HTTPException(status_code=400, detail="Keturunan tidak valid. Pilih Jawa, Sunda, atau Cina.")
         
         timestamp = int(time.time())
         file_extension = os.path.splitext(file.filename)[1]
@@ -453,18 +459,18 @@ async def register_person_endpoint(
         
         image = cv2.imread(upload_path)
         if image is None:
-            raise HTTPException(status_code=400, detail="Could not read image file. Pastikan file gambar valid.")
+            raise HTTPException(status_code=400, detail=IMAGE_READ_ERROR)
         
         faces = detect_faces(image)
         if not faces:
-            raise HTTPException(status_code=400, detail="No faces detected in the image. Unggah gambar dengan wajah yang jelas.")
+            raise HTTPException(status_code=400, detail=NO_FACES_ERROR)
         
         faces.sort(key=lambda x: x['confidence'], reverse=True)
         main_face = faces[0]
         
         face_img = extract_face(image, main_face)
         if face_img is None:
-            raise HTTPException(status_code=400, detail="Could not extract face from image. Pastikan wajah terdeteksi dengan baik.")
+            raise HTTPException(status_code=400, detail=FACE_EXTRACT_ERROR)
         
         try:
             embedding = face_embedding_model.get_embedding(face_img)
@@ -482,13 +488,46 @@ async def register_person_endpoint(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error registering person: {str(e)}")
 
+def process_image_for_import(file_path: str, metadata: dict, filename: str, failed_files: List[str]):
+    image = cv2.imread(file_path)
+    if image is None:
+        failed_files.append(f"{filename}: Could not read image")
+        return None, None, None
+
+    faces = detect_faces(image)
+    if not faces:
+        failed_files.append(f"{filename}: No faces detected")
+        return None, None, None
+
+    faces.sort(key=lambda x: x['confidence'], reverse=True)
+    main_face = faces[0]
+
+    face_img = extract_face(image, main_face)
+    if face_img is None:
+        failed_files.append(f"{filename}: Could not extract face")
+        return None, None, None
+
+    try:
+        embedding = face_embedding_model.get_embedding(face_img)
+    except Exception as e:
+        failed_files.append(f"{filename}: Error generating embedding - {str(e)}")
+        return None, None, None
+
+    nama = metadata.get(filename, {}).get('nama', os.path.splitext(filename)[0])
+    keturunan = metadata.get(filename, {}).get('keturunan', "Unknown")
+
+    if keturunan not in ["Jawa", "Sunda", "Cina", "Unknown"]:
+        failed_files.append(f"{filename}: Invalid keturunan")
+        return None, None, None
+
+    return nama, keturunan, embedding
+
 @app.post("/import_dataset")
 async def import_dataset_endpoint(dataset_path: str = Form(...), metadata_path: Optional[str] = Form(None)):
     try:
         if not os.path.exists(dataset_path):
             raise HTTPException(status_code=400, detail=f"Dataset path {dataset_path} does not exist")
-        
-        allowed_extensions = ('.jpg', '.jpeg', '.png')
+
         imported_count = 0
         failed_files = []
         
@@ -503,47 +542,15 @@ async def import_dataset_endpoint(dataset_path: str = Form(...), metadata_path: 
                     }
         
         for filename in os.listdir(dataset_path):
-            if not filename.lower().endswith(allowed_extensions):
+            if not filename.lower().endswith(ALLOWED_EXTENSIONS):
                 continue
                 
             file_path = os.path.join(dataset_path, filename)
-            image = cv2.imread(file_path)
-            if image is None:
-                failed_files.append(f"{filename}: Could not read image")
-                continue
+            nama, keturunan, embedding = process_image_for_import(file_path, metadata, filename, failed_files)
             
-            faces = detect_faces(image)
-            if not faces:
-                failed_files.append(f"{filename}: No faces detected")
-                continue
-            
-            faces.sort(key=lambda x: x['confidence'], reverse=True)
-            main_face = faces[0]
-            
-            face_img = extract_face(image, main_face)
-            if face_img is None:
-                failed_files.append(f"{filename}: Could not extract face")
-                continue
-            
-            try:
-                embedding = face_embedding_model.get_embedding(face_img)
-            except Exception as e:
-                failed_files.append(f"{filename}: Error generating embedding - {str(e)}")
-                continue
-            
-            if filename in metadata:
-                nama = metadata[filename]['nama']
-                keturunan = metadata[filename]['keturunan']
-            else:
-                nama = os.path.splitext(filename)[0]
-                keturunan = "Unknown"
-            
-            if keturunan not in ["Jawa", "Sunda", "Batak", "Unknown"]:
-                failed_files.append(f"{filename}: Invalid keturunan")
-                continue
-                
-            person_id = db.add_person(nama, keturunan, embedding)
-            imported_count += 1
+            if embedding is not None:
+                db.add_person(nama, keturunan, embedding)
+                imported_count += 1
             
         return {
             "status": "success",
@@ -565,8 +572,8 @@ async def add_face_to_person(
         if not person:
             raise HTTPException(status_code=404, detail="Person not found")
         
-        if not file.filename.lower().endswith(('.jpg', '.jpeg', '.png')):
-            raise HTTPException(status_code=400, detail="Unsupported file format. Please upload a JPG or PNG image.")
+        if not file.filename.lower().endswith(ALLOWED_EXTENSIONS):
+            raise HTTPException(status_code=400, detail=UNSUPPORTED_FORMAT_ERROR)
         
         timestamp = int(time.time())
         file_extension = os.path.splitext(file.filename)[1]
@@ -578,18 +585,18 @@ async def add_face_to_person(
         
         image = cv2.imread(upload_path)
         if image is None:
-            raise HTTPException(status_code=400, detail="Could not read image file")
+            raise HTTPException(status_code=400, detail=IMAGE_READ_ERROR)
         
         faces = detect_faces(image)
         if not faces:
-            raise HTTPException(status_code=400, detail="No faces detected in the image")
+            raise HTTPException(status_code=400, detail=NO_FACES_ERROR)
         
         faces.sort(key=lambda x: x['confidence'], reverse=True)
         main_face = faces[0]
         
         face_img = extract_face(image, main_face)
         if face_img is None:
-            raise HTTPException(status_code=400, detail="Could not extract face from image")
+            raise HTTPException(status_code=400, detail=FACE_EXTRACT_ERROR)
         
         embedding = face_embedding_model.get_embedding(face_img)
         
@@ -597,16 +604,14 @@ async def add_face_to_person(
         if not success:
             raise HTTPException(status_code=500, detail="Failed to add face to person")
         
-        updated_person = db.get_person(person_id)
-        return updated_person
+        return db.get_person(person_id)
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error adding face to person: {str(e)}")
 
 @app.get("/people")
 async def list_people():
-    people = db.get_all_people()
-    return people
+    return db.get_all_people()
 
 @app.get("/people/{person_id}")
 async def get_person(person_id: str):
@@ -615,7 +620,7 @@ async def get_person(person_id: str):
         raise HTTPException(status_code=404, detail="Person not found")
     return person
 
-@app.get("/ui")
+@app.get("/home")
 async def custom_ui(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
