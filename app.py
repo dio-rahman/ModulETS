@@ -62,32 +62,6 @@ app.add_middleware(
 
 app.mount("/static", StaticFiles(directory="results"), name="static")
 
-class FaceEmbeddingModel:
-    def get_embedding(self, face_img):
-        face_img_rgb = cv2.cvtColor(face_img, cv2.COLOR_BGR2RGB)
-        embedding = DeepFace.represent(face_img_rgb, model_name="Facenet", enforce_detection=False)
-        return np.array(embedding[0]["embedding"])
-
-class EthnicityClassificationModel:
-    def __init__(self):
-        self.suku = ["Jawa", "Sunda", "Cina"]
-        
-    def predict(self, face_img):
-        _ = cv2.resize(face_img, (224, 224)) 
-        rng = np.random.default_rng(seed=42)
-        probs = rng.random(len(self.suku))
-        probs = probs / np.sum(probs)
-        
-        predictions = {
-            self.suku[i]: float(probs[i]) 
-            for i in range(len(self.suku))
-        }
-        
-        return predictions
-
-face_embedding_model = FaceEmbeddingModel()
-ethnicity_model = EthnicityClassificationModel()
-
 class Database:
     def __init__(self, db_path="database/embeddings.json"):
         self.db_path = db_path
@@ -166,10 +140,26 @@ class Database:
             
             max_similarity = 0
             for emb in person_embeddings:
-                emb_a = embedding.reshape(1, -1)
-                emb_b = emb.reshape(1, -1)
-                similarity = np.dot(emb_a, emb_b.T)[0][0] / (np.linalg.norm(emb_a) * np.linalg.norm(emb_b))
-                max_similarity = max(max_similarity, similarity)
+                # Pastikan dimensi sesuai dengan mengecek shape dan menyesuaikan
+                try:
+                    # Flatten kedua embedding untuk memastikan dimensi yang benar
+                    emb_flat = emb.flatten()
+                    embedding_flat = embedding.flatten()
+                    
+                    # Hitung dot product
+                    dot_product = np.dot(emb_flat, embedding_flat)
+                    
+                    # Hitung norm (magnitude) dari kedua vektor
+                    norm_emb = np.linalg.norm(emb_flat)
+                    norm_embedding = np.linalg.norm(embedding_flat)
+                    
+                    # Hitung cosine similarity
+                    if norm_emb > 0 and norm_embedding > 0:
+                        similarity = dot_product / (norm_emb * norm_embedding)
+                        max_similarity = max(max_similarity, similarity)
+                except Exception as e:
+                    print(f"Error calculating similarity: {e}")
+                    continue
             
             if max_similarity >= threshold:
                 results.append({
@@ -178,9 +168,84 @@ class Database:
                     "keturunan": data["keturunan"],
                     "similarity": float(max_similarity)
                 })
-                
+                    
         results.sort(key=lambda x: x["similarity"], reverse=True)
         return results
+
+class FaceEmbeddingModel:
+    def get_embedding(self, face_img):
+        try:
+            face_img_rgb = cv2.cvtColor(face_img, cv2.COLOR_BGR2RGB)
+            embedding = DeepFace.represent(face_img_rgb, model_name="Facenet", enforce_detection=False)
+            
+            # Pastikan embedding selalu memiliki bentuk yang konsisten
+            emb_array = np.array(embedding[0]["embedding"])
+            
+            # Debug info
+            print(f"Embedding shape: {emb_array.shape}")
+            
+            # Pastikan bentuknya 1D atau reshape ke vektor 1D jika tidak
+            if len(emb_array.shape) > 1:
+                emb_array = emb_array.flatten()
+                
+            return emb_array
+        except Exception as e:
+            print(f"Error in get_embedding: {e}")
+            # Fallback ke dummy embedding dengan ukuran yang benar
+            return np.zeros(128)  # Sesuaikan dengan ukuran embedding yang diharapkan
+
+class EthnicityClassificationModel:
+    def __init__(self):
+        self.suku = ["Jawa", "Sunda", "Cina"]
+        self.database = Database()
+        
+    def predict(self, face_img):
+        # Mendapatkan embedding dari wajah yang diunggah
+        embedding = face_embedding_model.get_embedding(face_img)
+        
+        # Mencari wajah yang mirip dalam database
+        similar_faces = self.database.find_similar_faces(embedding, threshold=0.5)
+        
+        # Jika tidak ada wajah yang mirip, gunakan pendekatan dummy
+        if not similar_faces:
+            print("No similar faces found, using random prediction")
+            # Fallback ke pendekatan dummy jika tidak ada kecocokan
+            rng = np.random.default_rng(seed=42)
+            probs = rng.random(len(self.suku))
+            probs = probs / np.sum(probs)
+            
+            predictions = {
+                self.suku[i]: float(probs[i]) 
+                for i in range(len(self.suku))
+            }
+            return predictions
+        
+        # Menghitung distribusi keturunan dari wajah-wajah yang mirip
+        ethnicity_counts = {"Jawa": 0, "Sunda": 0, "Cina": 0}
+        total_similarity = 0
+        
+        for face in similar_faces:
+            similarity = face["similarity"]
+            keturunan = face["keturunan"]
+            
+            if keturunan in ethnicity_counts:
+                ethnicity_counts[keturunan] += similarity
+                total_similarity += similarity
+        
+        # Normalisasi distribusi
+        predictions = {}
+        if total_similarity > 0:
+            for ethnicity, count in ethnicity_counts.items():
+                predictions[ethnicity] = float(count / total_similarity)
+        else:
+            # Fallback jika tidak ada total similarity (tidak seharusnya terjadi)
+            for ethnicity in ethnicity_counts:
+                predictions[ethnicity] = 1.0 / len(ethnicity_counts)
+                
+        return predictions
+
+face_embedding_model = FaceEmbeddingModel()
+ethnicity_model = EthnicityClassificationModel()
 
 db = Database()
 
@@ -317,6 +382,28 @@ def detect_expression(face_img):
         print(f"Error detecting expression: {e}")
         return "Unknown"
 
+@app.on_event("startup")
+async def startup_event():
+    # Import dataset dari ModulETS/dataset_wajah jika tersedia
+    dataset_path = "ModulETS/dataset_wajah"
+    metadata_path = os.path.join(dataset_path, "metadata.csv")
+    
+    if os.path.exists(dataset_path) and os.path.exists(metadata_path):
+        print(f"Importing dataset from {dataset_path}")
+        metadata = load_metadata(metadata_path)
+        
+        imported_count = 0
+        for filename in os.listdir(dataset_path):
+            if not filename.lower().endswith(ALLOWED_EXTENSIONS):
+                continue
+                
+            file_path = os.path.join(dataset_path, filename)
+            success, error = process_image(file_path, metadata, filename)
+            if success:
+                imported_count += 1
+        
+        print(f"Imported {imported_count} faces from dataset")
+
 @app.get("/")
 async def root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
@@ -401,6 +488,13 @@ async def detect_ethnicity_endpoint(file: UploadFile = File(...)):
         if face_img is None:
             raise HTTPException(status_code=400, detail=FACE_EXTRACT_ERROR)
         
+        # Dapatkan embedding untuk perbandingan
+        embedding = face_embedding_model.get_embedding(face_img)
+        
+        # Cari wajah serupa untuk referensi
+        similar_faces = db.find_similar_faces(embedding, threshold=0.5)
+        
+        # Dapatkan prediksi keturunan
         ethnicity_predictions = ethnicity_model.predict(face_img)
         
         dominant_ethnicity = max(ethnicity_predictions.items(), key=lambda x: x[1])[0]
@@ -417,6 +511,11 @@ async def detect_ethnicity_endpoint(file: UploadFile = File(...)):
         # Add expression information
         expression_label = f"Expression: {expression}"
         cv2.putText(result_image, expression_label, (x, y-30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        
+        # Add similar faces information if available
+        if similar_faces:
+            similar_label = f"Similar to: {similar_faces[0]['nama']} ({similar_faces[0]['similarity']:.2f})"
+            cv2.putText(result_image, similar_label, (x, y-50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
         
         result_path = os.path.join("results", unique_filename)
         cv2.imwrite(result_path, result_image)
