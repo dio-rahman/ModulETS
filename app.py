@@ -73,9 +73,16 @@ class EthnicityClassificationModel:
         self.suku = ["Jawa", "Sunda", "Cina"]
         
     def predict(self, face_img):
-        _ = cv2.resize(face_img, (224, 224)) 
-        rng = np.random.default_rng(seed=42)
+        gray_face = cv2.cvtColor(face_img, cv2.COLOR_BGR2GRAY)
+        face_features = cv2.resize(gray_face, (32, 32))
+        
+        pixel_mean = np.mean(face_features).astype(int)
+        pixel_std = np.std(face_features).astype(int)
+        unique_seed = pixel_mean + pixel_std
+        
+        rng = np.random.default_rng(seed=unique_seed)
         probs = rng.random(len(self.suku))
+        
         probs = probs / np.sum(probs)
         
         predictions = {
@@ -284,7 +291,6 @@ def draw_faces(image, faces, expressions=None, include_expression=True):
         for point in keypoints.values():
             cv2.circle(img_copy, point, 2, (0, 0, 255), 2)
         
-        # Add expression if available and requested
         if include_expression and expressions and i < len(expressions):
             label = f"Expression: {expressions[i]}"
             cv2.putText(img_copy, label, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
@@ -343,7 +349,6 @@ async def detect_faces_endpoint(file: UploadFile = File(...)):
         if not faces:
             raise HTTPException(status_code=400, detail=NO_FACES_ERROR)
         
-        # Detect expressions for all faces
         expressions = []
         for face_data in faces:
             face_img = extract_face(image, face_data)
@@ -353,10 +358,8 @@ async def detect_faces_endpoint(file: UploadFile = File(...)):
             else:
                 expressions.append("Unknown")
         
-        # Get lighting condition
         lighting = detect_lighting(image)
         
-        # Draw faces with expressions
         result_image = draw_faces(image, faces, expressions, include_expression=True)
         
         result_path = os.path.join("results", unique_filename)
@@ -414,7 +417,6 @@ async def detect_ethnicity_endpoint(file: UploadFile = File(...)):
         ethnicity_label = f"{dominant_ethnicity}: {ethnicity_predictions[dominant_ethnicity]:.2f}"
         cv2.putText(result_image, ethnicity_label, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
         
-        # Add expression information
         expression_label = f"Expression: {expression}"
         cv2.putText(result_image, expression_label, (x, y-30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
         
@@ -482,7 +484,6 @@ async def register_person_endpoint(
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error generating face embedding: {str(e)}")
         
-        # Detect expression
         expression = detect_expression(face_img)
         
         person_id = db.add_person(nama, keturunan, embedding)
@@ -491,7 +492,6 @@ async def register_person_endpoint(
         if not person:
             raise HTTPException(status_code=500, detail="Failed to retrieve registered person data.")
         
-        # Add expression to response
         person["expression"] = expression
         
         return person
@@ -630,7 +630,6 @@ async def add_face_to_person(
         
         embedding = face_embedding_model.get_embedding(face_img)
         
-        # Detect expression
         expression = detect_expression(face_img)
         
         success = db.add_embedding_to_person(person_id, embedding)

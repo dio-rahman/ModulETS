@@ -405,26 +405,32 @@
       document.getElementById(screenId).classList.add('active-screen');
     }
     
+    // Ubah kode penanganan error pada form uploadDatasetForm
     document.getElementById('uploadDatasetForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      
+    
       const form = e.target;
       const formData = new FormData(form);
-      
+    
       try {
         const res = await fetch('http://127.0.0.1:8000/register', {
           method: 'POST',
           body: formData,
         });
-        
+    
         const result = document.getElementById('upload-result');
         result.innerHTML = '';
-        
+    
+        const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
         if (!res.ok) {
-          const err = await res.json();
-          result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${err.detail}</p>`;
+          // Menampilkan pesan error dengan lebih detail
+          let errorMessage = 'Unknown error occurred';
+          if (data && typeof data === 'object') {
+            errorMessage = data.detail || JSON.stringify(data);
+          }
+          result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
         } else {
-          const data = await res.json();
           result.innerHTML = `
             <h3>Upload Berhasil</h3>
             <p>Nama: ${data.nama}</p>
@@ -441,71 +447,85 @@
       }
     });
     
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
     document.getElementById('uploadForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      
+    
       const form = e.target;
       const formData = new FormData(form);
       const endpoint = document.getElementById('endpointSelect').value;
-      
+    
       try {
         const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
           method: 'POST',
           body: formData,
         });
-        
+    
         const result = document.getElementById('result');
         result.innerHTML = '';
-        
+    
+        const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
         if (!res.ok) {
-          const err = await res.json();
-          result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${err.detail}</p>`;
+          // Menampilkan pesan error dengan lebih detail
+          let errorMessage = 'Unknown error occurred';
+          if (data && typeof data === 'object') {
+            errorMessage = data.detail || JSON.stringify(data);
+          }
+          result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
         } else {
-          const data = await res.json();
-          
+          // Kode yang ada selanjutnya...
+    
           if (endpoint === '/detect') {
-            result.innerHTML += `<p>Jumlah wajah yang terdeteksi: ${data.faces_detected}</p>`;
-            
-            if (data.expressions && data.expressions.length > 0) {
-              result.innerHTML += '<p>Ekspresi wajah:</p>';
-              data.expressions.forEach((expression, index) => {
-                result.innerHTML += `<p>Wajah ${index + 1}: <span class="expression-badge">${expression}</span></p>`;
-              });
-            }
-            
-            if (data.image_path) {
-              result.innerHTML += `<img src="${data.image_path}" alt="Wajah terdeteksi" />`;
-            }
+            // Kode untuk detect endpoint...
           } else if (endpoint === '/compare') {
-            if (data.results.length > 0) {
-              result.innerHTML += '<h3>Wajah Serupa yang Ditemukan:</h3><ul>';
-              data.results.forEach(person => {
-                result.innerHTML += `
-                  <li>
-                    ${person.nama} (${person.keturunan}) - Kemiripan: ${(person.similarity * 100).toFixed(0)}%
-                    ${person.expression ? `<br>Ekspresi: <span class="expression-badge">${person.expression}</span>` : ''}
-                  </li>`;
-              });
-              result.innerHTML += '</ul>';
-            } else {
-              result.innerHTML += '<p>Tidak ada wajah serupa yang ditemukan di database.</p>';
-            }
-            result.innerHTML += `<p>Ambang batas yang digunakan: ${(data.threshold * 100).toFixed(0)}%</p>`;
+            // Kode untuk compare endpoint...
           } else if (endpoint === '/keturunan') {
-            result.innerHTML += `<p>Keturunan dominan : ${data.dominant_keturunan}</p>`;
-            
-            if (data.expression) {
-              result.innerHTML += `<p>Ekspresi wajah: <span class="expression-badge">${data.expression}</span></p>`;
-            }
-            
-            result.innerHTML += '<p>Perkiraan Cenderung Ke - :</p><ul>';
-            data.predictions.forEach(pred => {
-              result.innerHTML += `<li>${pred.keturunan}: ${(pred.confidence * 100).toFixed(0)}%</li>`;
-            });
-            result.innerHTML += '</ul>';
-            if (data.image_path) {
-              result.innerHTML += `<img src="${data.image_path}" alt="Deteksi keturunan" />`;
-            }
+            // Kode untuk keturunan endpoint...
           }
         }
       } catch (error) {
@@ -515,6 +535,3174 @@
         `;
       }
     });
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
+   // Ubah kode penanganan error pada form uploadForm
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const formData = new FormData(form);
+  const endpoint = document.getElementById('endpointSelect').value;
+  
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = document.getElementById('result');
+    result.innerHTML = '';
+    
+    const data = await res.json(); // Ambil data JSON terlebih dahulu
+    
+    if (!res.ok) {
+      // Menampilkan pesan error dengan lebih detail
+      let errorMessage = 'Unknown error occurred';
+      if (data && typeof data === 'object') {
+        errorMessage = data.detail || JSON.stringify(data);
+      }
+      result.innerHTML = `<p style="color: #e74c3c;">❌ Error: ${errorMessage}</p>`;
+    } else {
+      // Kode yang ada selanjutnya...
+      
+      if (endpoint === '/detect') {
+        // Kode untuk detect endpoint...
+      } else if (endpoint === '/compare') {
+        // Kode untuk compare endpoint...
+      } else if (endpoint === '/keturunan') {
+        // Kode untuk keturunan endpoint...
+      }
+    }
+  } catch (error) {
+    document.getElementById('result').innerHTML = `
+      <p style="color: #e74c3c;">❌ Error: ${error.message}</p>
+      <p>Pastikan server API berjalan di http://127.0.0.1:8000</p>
+    `;
+  }
+});
     
     let videoStream = null;
     const webcamElement = document.getElementById('webcam');
