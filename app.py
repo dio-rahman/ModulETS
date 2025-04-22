@@ -62,42 +62,6 @@ app.add_middleware(
 
 app.mount("/static", StaticFiles(directory="results"), name="static")
 
-<<<<<<< HEAD
-class FaceEmbeddingModel:
-    def get_embedding(self, face_img):
-        face_img_rgb = cv2.cvtColor(face_img, cv2.COLOR_BGR2RGB)
-        embedding = DeepFace.represent(face_img_rgb, model_name="Facenet", enforce_detection=False)
-        return np.array(embedding[0]["embedding"])
-
-class EthnicityClassificationModel:
-    def __init__(self):
-        self.suku = ["Jawa", "Sunda", "Cina"]
-        
-    def predict(self, face_img):
-        gray_face = cv2.cvtColor(face_img, cv2.COLOR_BGR2GRAY)
-        face_features = cv2.resize(gray_face, (32, 32))
-        
-        pixel_mean = np.mean(face_features).astype(int)
-        pixel_std = np.std(face_features).astype(int)
-        unique_seed = pixel_mean + pixel_std
-        
-        rng = np.random.default_rng(seed=unique_seed)
-        probs = rng.random(len(self.suku))
-        
-        probs = probs / np.sum(probs)
-        
-        predictions = {
-            self.suku[i]: float(probs[i]) 
-            for i in range(len(self.suku))
-        }
-        
-        return predictions
-
-face_embedding_model = FaceEmbeddingModel()
-ethnicity_model = EthnicityClassificationModel()
-
-=======
->>>>>>> 0ed4dfe7708dbe43346496aa1cb99afe277cee78
 class Database:
     def __init__(self, db_path="database/embeddings.json"):
         self.db_path = db_path
