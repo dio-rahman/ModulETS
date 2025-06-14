@@ -3,5 +3,5 @@ venv/
 *.pyc
 __pycache__/
 *.pyd
-*.dll"env/" 
-"venv/" 
+*.dll"env/"
+"venv/"
