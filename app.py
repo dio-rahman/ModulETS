@@ -17,6 +17,7 @@ import csv
 from pydantic import BaseModel
 from typing import List, Optional
 from deepface import DeepFace
+from datetime import datetime
 
 try:
     import tensorflow as tf
@@ -61,6 +62,19 @@ app.add_middleware(
 )
 
 app.mount("/static", StaticFiles(directory="results"), name="static")
+
+# Fungsi untuk menyimpan log deteksi
+def save_detection_log(log_data):
+    log_file = "database/detection_history.json"
+    os.makedirs(os.path.dirname(log_file), exist_ok=True)
+    if os.path.exists(log_file):
+        with open(log_file, 'r') as f:
+            logs = json.load(f)
+    else:
+        logs = []
+    logs.append(log_data)
+    with open(log_file, 'w') as f:
+        json.dump(logs, f, indent=2)
 
 class Database:
     def __init__(self, db_path="database/embeddings.json"):
@@ -134,33 +148,22 @@ class Database:
     
     def find_similar_faces(self, embedding, threshold=0.6):
         results = []
-        
         for person_id, data in self.embeddings.items():
             person_embeddings = data["embeddings"]
-            
             max_similarity = 0
             for emb in person_embeddings:
-                # Pastikan dimensi sesuai dengan mengecek shape dan menyesuaikan
                 try:
-                    # Flatten kedua embedding untuk memastikan dimensi yang benar
                     emb_flat = emb.flatten()
                     embedding_flat = embedding.flatten()
-                    
-                    # Hitung dot product
                     dot_product = np.dot(emb_flat, embedding_flat)
-                    
-                    # Hitung norm (magnitude) dari kedua vektor
                     norm_emb = np.linalg.norm(emb_flat)
                     norm_embedding = np.linalg.norm(embedding_flat)
-                    
-                    # Hitung cosine similarity
                     if norm_emb > 0 and norm_embedding > 0:
                         similarity = dot_product / (norm_emb * norm_embedding)
                         max_similarity = max(max_similarity, similarity)
                 except Exception as e:
                     print(f"Error calculating similarity: {e}")
                     continue
-            
             if max_similarity >= threshold:
                 results.append({
                     "person_id": person_id,
@@ -168,7 +171,6 @@ class Database:
                     "keturunan": data["keturunan"],
                     "similarity": float(max_similarity)
                 })
-                    
         results.sort(key=lambda x: x["similarity"], reverse=True)
         return results
 
@@ -177,22 +179,14 @@ class FaceEmbeddingModel:
         try:
             face_img_rgb = cv2.cvtColor(face_img, cv2.COLOR_BGR2RGB)
             embedding = DeepFace.represent(face_img_rgb, model_name="Facenet", enforce_detection=False)
-            
-            # Pastikan embedding selalu memiliki bentuk yang konsisten
             emb_array = np.array(embedding[0]["embedding"])
-            
-            # Debug info
             print(f"Embedding shape: {emb_array.shape}")
-            
-            # Pastikan bentuknya 1D atau reshape ke vektor 1D jika tidak
             if len(emb_array.shape) > 1:
                 emb_array = emb_array.flatten()
-                
             return emb_array
         except Exception as e:
             print(f"Error in get_embedding: {e}")
-            # Fallback ke dummy embedding dengan ukuran yang benar
-            return np.zeros(128)  # Sesuaikan dengan ukuran embedding yang diharapkan
+            return np.zeros(128)
 
 class EthnicityClassificationModel:
     def __init__(self):
@@ -200,53 +194,34 @@ class EthnicityClassificationModel:
         self.database = Database()
         
     def predict(self, face_img):
-        # Mendapatkan embedding dari wajah yang diunggah
         embedding = face_embedding_model.get_embedding(face_img)
-        
-        # Mencari wajah yang mirip dalam database
         similar_faces = self.database.find_similar_faces(embedding, threshold=0.5)
-        
-        # Jika tidak ada wajah yang mirip, gunakan pendekatan dummy
         if not similar_faces:
             print("No similar faces found, using random prediction")
-            # Fallback ke pendekatan dummy jika tidak ada kecocokan
             rng = np.random.default_rng(seed=42)
             probs = rng.random(len(self.suku))
             probs = probs / np.sum(probs)
-            
-            predictions = {
-                self.suku[i]: float(probs[i]) 
-                for i in range(len(self.suku))
-            }
+            predictions = {self.suku[i]: float(probs[i]) for i in range(len(self.suku))}
             return predictions
-        
-        # Menghitung distribusi keturunan dari wajah-wajah yang mirip
         ethnicity_counts = {"Jawa": 0, "Sunda": 0, "Cina": 0}
         total_similarity = 0
-        
         for face in similar_faces:
             similarity = face["similarity"]
             keturunan = face["keturunan"]
-            
             if keturunan in ethnicity_counts:
                 ethnicity_counts[keturunan] += similarity
                 total_similarity += similarity
-        
-        # Normalisasi distribusi
         predictions = {}
         if total_similarity > 0:
             for ethnicity, count in ethnicity_counts.items():
                 predictions[ethnicity] = float(count / total_similarity)
         else:
-            # Fallback jika tidak ada total similarity (tidak seharusnya terjadi)
             for ethnicity in ethnicity_counts:
                 predictions[ethnicity] = 1.0 / len(ethnicity_counts)
-                
         return predictions
 
 face_embedding_model = FaceEmbeddingModel()
 ethnicity_model = EthnicityClassificationModel()
-
 db = Database()
 
 class Person(BaseModel):
@@ -287,6 +262,7 @@ class PersonResponse(BaseModel):
     keturunan: str
     embedding_count: int
     expression: Optional[str] = None
+    suggested_keturunan: Optional[str] = None
 
 def read_image_file(file) -> np.ndarray:
     contents = file.file.read()
@@ -304,7 +280,6 @@ def detect_faces(image) -> list:
         rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     else:
         rgb_image = image
-        
     if detector is not None:
         faces = detector.detect_faces(rgb_image)
         return faces
@@ -330,7 +305,6 @@ def extract_face(image, face_data, required_size=(160, 160)):
     x, y, width, height = face_data['box']
     x, y = max(0, x), max(0, y)
     face = image[y:y+height, x:x+width]
-    
     if face.size > 0: 
         face = cv2.resize(face, required_size)
         return face
@@ -339,20 +313,16 @@ def extract_face(image, face_data, required_size=(160, 160)):
 
 def draw_faces(image, faces, expressions=None, include_expression=True):
     img_copy = image.copy()
-    
     for i, face in enumerate(faces):
         x, y, width, height = face['box']
         x, y = max(0, x), max(0, y)
         cv2.rectangle(img_copy, (x, y), (x+width, y+height), (0, 255, 0), 2)
-        
         keypoints = face['keypoints']
         for point in keypoints.values():
             cv2.circle(img_copy, point, 2, (0, 0, 255), 2)
-        
         if include_expression and expressions and i < len(expressions):
             label = f"Expression: {expressions[i]}"
             cv2.putText(img_copy, label, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            
     return img_copy
 
 def detect_lighting(image):
@@ -383,24 +353,19 @@ def detect_expression(face_img):
 
 @app.on_event("startup")
 async def startup_event():
-    # Import dataset dari ModulETS/dataset_wajah jika tersedia
     dataset_path = "ModulETS/dataset_wajah"
     metadata_path = os.path.join(dataset_path, "metadata.csv")
-    
     if os.path.exists(dataset_path) and os.path.exists(metadata_path):
         print(f"Importing dataset from {dataset_path}")
         metadata = load_metadata(metadata_path)
-        
         imported_count = 0
         for filename in os.listdir(dataset_path):
             if not filename.lower().endswith(ALLOWED_EXTENSIONS):
                 continue
-                
             file_path = os.path.join(dataset_path, filename)
             success, error = process_image(file_path, metadata, filename)
             if success:
                 imported_count += 1
-        
         print(f"Imported {imported_count} faces from dataset")
 
 @app.get("/")
@@ -441,9 +406,16 @@ async def detect_faces_endpoint(file: UploadFile = File(...)):
         lighting = detect_lighting(image)
         
         result_image = draw_faces(image, faces, expressions, include_expression=True)
-        
         result_path = os.path.join("results", unique_filename)
         cv2.imwrite(result_path, result_image)
+        
+        # Simpan log deteksi
+        log_data = {
+            "filename": file.filename,
+            "expressions": expressions,
+            "timestamp": datetime.now().isoformat()
+        }
+        save_detection_log(log_data)
         
         return {
             "faces_detected": len(faces),
@@ -484,13 +456,8 @@ async def detect_ethnicity_endpoint(file: UploadFile = File(...)):
         if face_img is None:
             raise HTTPException(status_code=400, detail=FACE_EXTRACT_ERROR)
         
-        # Dapatkan embedding untuk perbandingan
         embedding = face_embedding_model.get_embedding(face_img)
-        
-        # Cari wajah serupa untuk referensi
         similar_faces = db.find_similar_faces(embedding, threshold=0.5)
-        
-        # Dapatkan prediksi keturunan
         ethnicity_predictions = ethnicity_model.predict(face_img)
         
         dominant_ethnicity = max(ethnicity_predictions.items(), key=lambda x: x[1])[0]
@@ -499,15 +466,12 @@ async def detect_ethnicity_endpoint(file: UploadFile = File(...)):
         expression = detect_expression(face_img)
         
         result_image = draw_faces(image, [main_face])
-        
         x, y, _, _ = main_face['box']
         ethnicity_label = f"{dominant_ethnicity}: {ethnicity_predictions[dominant_ethnicity]:.2f}"
         cv2.putText(result_image, ethnicity_label, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-        
         expression_label = f"Expression: {expression}"
         cv2.putText(result_image, expression_label, (x, y-30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
         
-        # Add similar faces information if available
         if similar_faces:
             similar_label = f"Similar to: {similar_faces[0]['nama']} ({similar_faces[0]['similarity']:.2f})"
             cv2.putText(result_image, similar_label, (x, y-50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
@@ -520,6 +484,16 @@ async def detect_ethnicity_endpoint(file: UploadFile = File(...)):
             for eth, conf in ethnicity_predictions.items()
         ]
         formatted_predictions.sort(key=lambda x: x["confidence"], reverse=True)
+        
+        # Simpan log deteksi
+        log_data = {
+            "filename": file.filename,
+            "expressions": [expression],
+            "predictions": formatted_predictions,
+            "dominant_keturunan": dominant_ethnicity,
+            "timestamp": datetime.now().isoformat()
+        }
+        save_detection_log(log_data)
         
         return {
             "predictions": formatted_predictions,
@@ -536,7 +510,7 @@ async def detect_ethnicity_endpoint(file: UploadFile = File(...)):
 async def register_person_endpoint(
     file: UploadFile = File(...),
     nama: str = Form(...),
-    keturunan: str = Form(...)
+    keturunan: Optional[str] = Form(None)
 ):
     try:
         if not file.filename.lower().endswith(ALLOWED_EXTENSIONS):
@@ -544,9 +518,6 @@ async def register_person_endpoint(
         
         if not nama.strip():
             raise HTTPException(status_code=400, detail="Nama tidak boleh kosong.")
-        
-        if keturunan not in ["Jawa", "Sunda", "Cina"]:
-            raise HTTPException(status_code=400, detail="Keturunan tidak valid. Pilih Jawa, Sunda, atau Cina.")
         
         timestamp = int(time.time())
         file_extension = os.path.splitext(file.filename)[1]
@@ -571,13 +542,24 @@ async def register_person_endpoint(
         if face_img is None:
             raise HTTPException(status_code=400, detail=FACE_EXTRACT_ERROR)
         
-        try:
-            embedding = face_embedding_model.get_embedding(face_img)
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Error generating face embedding: {str(e)}")
+        embedding = face_embedding_model.get_embedding(face_img)
+        similar_faces = db.find_similar_faces(embedding, threshold=0.7)
+        
+        suggested_keturunan = None
+        if similar_faces:
+            suggested_keturunan = similar_faces[0]["keturunan"]
+        
+        if not keturunan and suggested_keturunan:
+            keturunan = suggested_keturunan
+            print(f"Suggesting keturunan: {keturunan}")
+        
+        if not keturunan:
+            raise HTTPException(status_code=400, detail="Keturunan diperlukan atau tidak ada saran yang tersedia.")
+        
+        if keturunan not in ["Jawa", "Sunda", "Cina"]:
+            raise HTTPException(status_code=400, detail="Keturunan tidak valid. Pilih Jawa, Sunda, atau Cina.")
         
         expression = detect_expression(face_img)
-        
         person_id = db.add_person(nama, keturunan, embedding)
         
         person = db.get_person(person_id)
@@ -585,6 +567,7 @@ async def register_person_endpoint(
             raise HTTPException(status_code=500, detail="Failed to retrieve registered person data.")
         
         person["expression"] = expression
+        person["suggested_keturunan"] = suggested_keturunan
         
         return person
         
@@ -660,14 +643,12 @@ async def import_dataset_endpoint(dataset_path: str = Form(...), metadata_path: 
             raise HTTPException(status_code=400, detail=f"Dataset path {dataset_path} does not exist")
         
         metadata = load_metadata(metadata_path)
-        
         imported_count = 0
         failed_files = []
         
         for filename in os.listdir(dataset_path):
             if not filename.lower().endswith(ALLOWED_EXTENSIONS):
                 continue
-                
             file_path = os.path.join(dataset_path, filename)
             success, error = process_image(file_path, metadata, filename)
             if success:
@@ -685,10 +666,7 @@ async def import_dataset_endpoint(dataset_path: str = Form(...), metadata_path: 
         raise HTTPException(status_code=500, detail=f"Error importing dataset: {str(e)}")
 
 @app.post("/people/{person_id}/faces")
-async def add_face_to_person(
-    person_id: str,
-    file: UploadFile = File(...)
-):
+async def add_face_to_person(person_id: str, file: UploadFile = File(...)):
     try:
         person = db.get_person(person_id)
         if not person:
@@ -721,7 +699,6 @@ async def add_face_to_person(
             raise HTTPException(status_code=400, detail=FACE_EXTRACT_ERROR)
         
         embedding = face_embedding_model.get_embedding(face_img)
-        
         expression = detect_expression(face_img)
         
         success = db.add_embedding_to_person(person_id, embedding)
@@ -737,8 +714,13 @@ async def add_face_to_person(
         raise HTTPException(status_code=500, detail=f"Error adding face to person: {str(e)}")
 
 @app.get("/people")
-async def list_people():
-    return db.get_all_people()
+async def list_people(keturunan: Optional[str] = None, min_embeddings: Optional[int] = None):
+    people = db.get_all_people()
+    if keturunan:
+        people = [p for p in people if p["keturunan"] == keturunan]
+    if min_embeddings:
+        people = [p for p in people if p["embedding_count"] >= min_embeddings]
+    return people
 
 @app.get("/people/{person_id}")
 async def get_person(person_id: str):
@@ -746,6 +728,93 @@ async def get_person(person_id: str):
     if not person:
         raise HTTPException(status_code=404, detail="Person not found")
     return person
+
+@app.get("/history")
+async def get_detection_history():
+    log_file = "database/detection_history.json"
+    if os.path.exists(log_file):
+        with open(log_file, 'r') as f:
+            logs = json.load(f)
+        return logs
+    return []
+
+class StatsResponse(BaseModel):
+    total_faces: int
+    keturunan_distribution: dict
+    expression_distribution: dict
+    lighting_distribution: dict
+
+@app.get("/stats", response_model=StatsResponse)
+async def get_statistics():
+    people = db.get_all_people()
+    total_faces = sum(p["embedding_count"] for p in people)
+    
+    keturunan_dist = {"Jawa": 0, "Sunda": 0, "Cina": 0}
+    for person in people:
+        keturunan_dist[person["keturunan"]] += person["embedding_count"]
+    
+    log_file = "database/detection_history.json"
+    expression_dist = {}
+    lighting_dist = {"Terang": 0, "Redup": 0}
+    
+    if os.path.exists(log_file):
+        with open(log_file, 'r') as f:
+            logs = json.load(f)
+        for log in logs:
+            for expr in log.get("expressions", []):
+                expression_dist[expr] = expression_dist.get(expr, 0) + 1
+    
+    metadata_path = os.path.join("dataset_wajah", "metadata.csv")
+    if os.path.exists(metadata_path):
+        with open(metadata_path, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f, delimiter=";")
+            for row in reader:
+                lighting = row.get("pencahayaan", "Unknown")
+                if lighting in lighting_dist:
+                    lighting_dist[lighting] += 1
+    
+    return {
+        "total_faces": total_faces,
+        "keturunan_distribution": keturunan_dist,
+        "expression_distribution": expression_dist,
+        "lighting_distribution": lighting_dist
+    }
+
+class CompareResponse(BaseModel):
+    similarity_score: float
+
+@app.post("/compare", response_model=CompareResponse)
+async def compare_faces(file1: UploadFile = File(...), file2: UploadFile = File(...)):
+    try:
+        for file in (file1, file2):
+            if not file.filename.lower().endswith(ALLOWED_EXTENSIONS):
+                raise HTTPException(status_code=400, detail=UNSUPPORTED_FORMAT_ERROR)
+        
+        images = []
+        for file in (file1, file2):
+            upload_path = os.path.join("uploads", f"compare_{uuid.uuid4()}{os.path.splitext(file.filename)[1]}")
+            await file.seek(0)
+            save_uploaded_file(file, upload_path)
+            image = cv2.imread(upload_path)
+            if image is None:
+                raise HTTPException(status_code=400, detail=IMAGE_READ_ERROR)
+            faces = detect_faces(image)
+            if not faces:
+                raise HTTPException(status_code=400, detail=NO_FACES_ERROR)
+            face_img = extract_face(image, faces[0])
+            if face_img is None:
+                raise HTTPException(status_code=400, detail=FACE_EXTRACT_ERROR)
+            images.append(face_img)
+        
+        emb1 = face_embedding_model.get_embedding(images[0])
+        emb2 = face_embedding_model.get_embedding(images[1])
+        
+        similarity = np.dot(emb1, emb2) / (np.linalg.norm(emb1) * np.linalg.norm(emb2))
+        
+        return {"similarity_score": float(similarity)}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error comparing faces: {str(e)}")
 
 @app.get("/home")
 async def custom_ui(request: Request):
